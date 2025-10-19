@@ -148,6 +148,32 @@
     to { box-shadow: 0 0 20px var(--blue); }
   }
   #growthChart { min-height: 300px; }
+  .welcome-graphic {
+    text-align: center;
+    margin: 20px 0;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .welcome-message {
+    animation: typing 3s steps(40, end), blink-caret .75s step-end infinite;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: .15em solid var(--blue);
+    font-size: 1.5em;
+    margin: 20px 0;
+  }
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+  }
+  @keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: var(--blue); }
+  }
 </style>
 </head>
 <body>
@@ -236,7 +262,20 @@
           <h3 style="margin:0">Welcome</h3>
           <div class="tag" id="roleTag">—</div>
         </div>
-        <p class="muted">Welcome to SF0. Use the sidebar to navigate.</p>
+        <div class="welcome-graphic">
+          <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+            <text x="100" y="60" font-size="50" text-anchor="middle" fill="none" stroke="var(--blue)" stroke-width="3" font-family="Inter, sans-serif" font-weight="700">
+              SF0
+              <animate attributeName="stroke-dasharray" from="0 300" to="300 0" dur="2s" repeatCount="indefinite"/>
+              <animate attributeName="stroke-dashoffset" from="300" to="0" dur="2s" repeatCount="indefinite"/>
+            </text>
+            <path d="M20 80 Q100 40 180 80" stroke="var(--blue)" stroke-width="4" fill="none">
+              <animate attributeName="d" values="M20 80 Q100 40 180 80; M20 80 Q100 60 180 80; M20 80 Q100 40 180 80" dur="2s" repeatCount="indefinite"/>
+            </path>
+          </svg>
+        </div>
+        <p class="welcome-message">Welcome to SF0</p>
+        <p class="muted">Use the sidebar to navigate and explore our features.</p>
       </section>
 
       <section id="videos" class="card" style="display:none">
@@ -278,8 +317,23 @@
       </section>
 
       <section id="positives" class="card" style="display:none">
-        <h3 style="margin:0 0 8px 0">Positive Thinking</h3>
-        <div id="positiveList"></div>
+        <div class="flex-between">
+          <h3 style="margin:0">Positive Thinking</h3>
+          <div class="small-muted">Admins can add/edit/delete</div>
+        </div>
+
+        <div id="positiveAdmin" class="admin-panel card" style="display:none">
+          <h4 style="margin:0 0 8px 0">Create Positive (admin)</h4>
+          <input id="positiveTitle" placeholder="Title" />
+          <textarea id="positiveText" placeholder="Text" style="margin-top:8px"></textarea>
+          <input id="positiveImage" placeholder="Image URL (optional)" style="margin-top:8px"/>
+          <div class="row" style="margin-top:8px">
+            <button id="uploadPositive" class="btn">Publish</button>
+            <button id="clearPositive" class="small-btn">Clear</button>
+          </div>
+        </div>
+
+        <div id="positiveList" style="margin-top:12px"></div>
       </section>
 
       <section id="growth" class="card" style="display:none">
@@ -437,7 +491,6 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       errorEl.textContent = 'Please verify your email before logging in.';
       return;
     }
-    // Clear inputs after successful login attempt
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
   } catch (e) {
@@ -565,6 +618,7 @@ async function refreshRoleUI() {
   document.getElementById('socialAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('complaintAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('aboutAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('positiveAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
 }
 
 function esc(s) {
@@ -795,22 +849,129 @@ function inlineEditPost(key, data) {
   };
 }
 
-async function renderPositives() {
-  const el = document.getElementById('positiveList');
-  el.innerHTML = '';
-  const snap = await get(ref(db, 'positives'));
-  if (!snap.exists()) {
-    el.innerHTML = '<div class="muted">No positive items yet</div>';
+document.getElementById('uploadPositive').addEventListener('click', async () => {
+  const title = document.getElementById('positiveTitle').value.trim();
+  const text = document.getElementById('positiveText').value.trim();
+  const image = document.getElementById('positiveImage').value.trim();
+  if (!title || !text) {
+    alert('Title & text required');
     return;
   }
-  snap.forEach(c => {
-    const v = c.val();
-    const k = c.key;
-    const box = document.createElement('div');
-    box.className = 'positive fade-in';
-    box.innerHTML = `<strong>${esc(v.title)}</strong><div class="small-muted">${v.text ? esc(v.text) : ''}</div>`;
-    el.appendChild(box);
+  const role = await getRoleForCurrentUser();
+  if (role === 'admin' || role === 'owner') {
+    await push(ref(db, 'positives'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    document.getElementById('positiveTitle').value = '';
+    document.getElementById('positiveText').value = '';
+    document.getElementById('positiveImage').value = '';
+    await renderPositives();
+  } else alert('Only admins/owner can add positives');
+});
+
+document.getElementById('clearPositive').addEventListener('click', () => {
+  document.getElementById('positiveTitle').value = '';
+  document.getElementById('positiveText').value = '';
+  document.getElementById('positiveImage').value = '';
+});
+
+async function renderPositives() {
+  const listEl = document.getElementById('positiveList');
+  listEl.innerHTML = '';
+  const snap = await get(ref(db, 'positives'));
+  if (!snap.exists()) {
+    listEl.innerHTML = '<div class="muted">No positive items yet</div>';
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  snap.forEach(child => {
+    const v = child.val();
+    const k = child.key;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'positive fade-in';
+    wrapper.innerHTML = `
+      <div class="flex-between">
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
+        <div><span class="small-muted">👍</span> <span class="count" id="positlikes-${k}">0</span></div>
+      </div>
+      <div style="margin-top:8px"><p>${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px">` : ''}
+      <div class="controls">
+        <button class="small-btn like-btn" id="positlikes-btn-${k}" data-collection="positives" data-id="${k}">Like</button>
+        <button class="small-btn commentToggle" data-type="positive" data-id="${k}">Comments</button>
+      </div>
+      <div class="comment-box" id="positcomments-${k}" style="display:none">
+        <div class="comment-form">
+          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn postComment">Post comment</button>
+            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
+          </div>
+        </div>
+        <div class="comments-list"></div>
+      </div>
+    `;
+    if (role === 'admin' || role === 'owner') {
+      const edit = document.createElement('button');
+      edit.className = 'small-btn';
+      edit.textContent = 'Edit';
+      edit.onclick = () => inlineEditPositive(k, v);
+      const del = document.createElement('button');
+      del.className = 'small-btn';
+      del.style.background = '#fee';
+      del.textContent = 'Delete';
+      del.onclick = async () => {
+        if (confirm('Delete positive?')) {
+          await remove(ref(db, 'positives/' + k));
+          renderPositives();
+        }
+      };
+      wrapper.querySelector('.controls').appendChild(edit);
+      wrapper.querySelector('.controls').appendChild(del);
+    }
+    listEl.appendChild(wrapper);
+    wrapper.querySelector(`#positlikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
+    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments('positives', k, 'positive'));
+    watchLikes('positives', k, `positlikes-${k}`, `positlikes-btn-${k}`);
   });
+}
+
+function inlineEditPositive(key, data) {
+  const wrapper = document.querySelector(`#positiveList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
+  if (!wrapper) {
+    renderPositives();
+    return;
+  }
+  const body = wrapper.querySelector('div:nth-child(2)');
+  const imageEl = wrapper.querySelector('img');
+  if (body) body.style.display = 'none';
+  if (imageEl) imageEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form card';
+  form.innerHTML = `
+    <input class="edit-title" value="${escAttr(data.title)}" />
+    <textarea class="edit-content">${esc(data.text)}</textarea>
+    <input class="edit-image" value="${escAttr(data.image || '')}" placeholder="Image URL (optional)" />
+    <div class="edit-controls">
+      <button class="btn save">Save</button>
+      <button class="small-btn cancel">Cancel</button>
+    </div>
+  `;
+  wrapper.appendChild(form);
+  form.querySelector('.cancel').onclick = () => {
+    form.remove();
+    if (body) body.style.display = 'block';
+    if (imageEl) imageEl.style.display = 'block';
+  };
+  form.querySelector('.save').onclick = async () => {
+    const nt = form.querySelector('.edit-title').value.trim();
+    const nc = form.querySelector('.edit-content').value.trim();
+    const ni = form.querySelector('.edit-image').value.trim();
+    if (!nt || !nc) {
+      alert('Title & text required');
+      return;
+    }
+    await update(ref(db, 'positives/' + key), { title: nt, text: nc, image: ni });
+    await renderPositives();
+  };
 }
 
 async function renderGrowth() {
@@ -893,7 +1054,8 @@ function watchLikes(collection, id, countElId, btnElId) {
 }
 
 async function toggleComments(collectionPath, itemId, type) {
-  const wrapperId = (type === 'video') ? `vcomments-${itemId}` : `pcomments-${itemId}`;
+  const prefix = type === 'video' ? 'vcomments-' : type === 'post' ? 'pcomments-' : 'positcomments-';
+  const wrapperId = prefix + itemId;
   const box = document.getElementById(wrapperId);
   if (!box) return;
   if (box.style.display === 'block') {
@@ -1161,7 +1323,7 @@ document.getElementById('setSocialsBtn').addEventListener('click', async () => {
   const li = document.getElementById('socialLi').value.trim();
   document.getElementById('socialMsg').textContent = '';
   const role = await getRoleForCurrentUser();
-  if (role !== 'admin' && role !== 'owner') {
+  if (role !== 'admin' && role === 'owner') {
     document.getElementById('socialMsg').textContent = 'Only admins can set social links.';
     return;
   }
