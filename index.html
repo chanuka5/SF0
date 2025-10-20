@@ -98,6 +98,7 @@
   .nav-item:nth-child(7) { animation-delay: 0.7s; }
   .nav-item:nth-child(8) { animation-delay: 0.8s; }
   .nav-item:nth-child(9) { animation-delay: 0.9s; }
+  .nav-item:nth-child(10) { animation-delay: 0.95s; }
   .nav-item.logout { animation-delay: 1s; }
   .video-title-link {
     color: var(--blue);
@@ -174,6 +175,9 @@
     from, to { border-color: transparent }
     50% { border-color: var(--blue); }
   }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { border: 1px solid var(--muted); padding: 8px; text-align: left; }
+  th { background: var(--nav-active); }
 </style>
 </head>
 <body>
@@ -198,6 +202,15 @@
       <h2 style="margin:0 0 8px 0">Create account</h2>
       <input id="signupEmail" type="email" placeholder="Email" />
       <input id="signupPass" type="password" placeholder="Password (6+ chars)" style="margin-top:8px" />
+      <input id="signupFirstName" type="text" placeholder="First Name" style="margin-top:8px" />
+      <input id="signupLastName" type="text" placeholder="Last Name" style="margin-top:8px" />
+      <input id="signupDob" type="date" placeholder="Date of Birth" style="margin-top:8px" />
+      <select id="signupGender" style="margin-top:8px">
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
       <div class="row" style="margin-top:10px">
         <button id="signupBtn" class="btn">Sign up</button>
         <button id="showLogin" class="small-btn">Back to login</button>
@@ -248,6 +261,7 @@
         <div class="nav-item" data-target="growth"><div class="icon">📈</div><div class="label">Growth</div></div>
         <div class="nav-item" data-target="complaints"><div class="icon">✉️</div><div class="label">Complaints</div></div>
         <div class="nav-item" data-target="admins"><div class="icon">🛠️</div><div class="label">Manage Admins</div></div>
+        <div class="nav-item" data-target="details"><div class="icon">📊</div><div class="label">User Details</div></div>
         <div class="nav-item" data-target="about"><div class="icon">ℹ️</div><div class="label">About</div></div>
         <div class="nav-item" data-target="contact"><div class="icon">📞</div><div class="label">Contact</div></div>
         <div class="nav-item logout" id="logoutBtn"><div class="label">Logout</div></div>
@@ -326,7 +340,7 @@
           <h4 style="margin:0 0 8px 0">Create Positive (admin)</h4>
           <input id="positiveTitle" placeholder="Title" />
           <textarea id="positiveText" placeholder="Text" style="margin-top:8px"></textarea>
-          <input id="positiveImage" placeholder="Image URL (optional)" style="margin-top:8px"/>
+          <input id="positiveImageFile" type="file" accept="image/*" style="margin-top:8px"/>
           <div class="row" style="margin-top:8px">
             <button id="uploadPositive" class="btn">Publish</button>
             <button id="clearPositive" class="small-btn">Clear</button>
@@ -367,13 +381,34 @@
       </section>
 
       <section id="admins" class="card" style="display:none">
-        <h3 style="margin:0 0 8px 0">Manage Admins (Owner only)</h3>
-        <input id="adminEmailInput" placeholder="User email (to promote/demote)" />
-        <div class="row" style="margin-top:8px">
-          <button id="promoteBtn" class="btn">Promote to Admin</button>
-          <button id="demoteBtn" class="small-btn" style="background:#fee">Demote to User</button>
+        <h3 style="margin:0 0 8px 0">Manage Admins</h3>
+        <div id="adminManageControls" style="display:none">
+          <input id="adminEmailInput" placeholder="User email (to promote/demote)" />
+          <div class="row" style="margin-top:8px">
+            <button id="promoteBtn" class="btn">Promote to Admin</button>
+            <button id="demoteBtn" class="small-btn" style="background:#fee">Demote to User</button>
+          </div>
         </div>
         <div id="adminsList" style="margin-top:12px"></div>
+      </section>
+
+      <section id="details" class="card" style="display:none">
+        <h3 style="margin:0 0 8px 0">User Details (Admin View)</h3>
+        <input id="userSearch" placeholder="Search by email or name" style="margin-bottom:8px;width:100%;">
+        <table id="userTable">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>DOB</th>
+              <th>Gender</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </section>
 
       <section id="about" class="card" style="display:none">
@@ -419,6 +454,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getDatabase, ref, set, push, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCkiB65lvUh04SbfXMfKNjx0GQwAKCcwTY",
@@ -434,6 +470,7 @@ const OWNER_EMAIL = "chanukamindiw2006@gmail.com";
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
+const storage = getStorage(app);
 
 const authWrap = document.getElementById('authWrap');
 const appWrap = document.getElementById('app');
@@ -454,22 +491,30 @@ document.getElementById('backToLogin').onclick = () => showLogin('login');
 document.getElementById('signupBtn').addEventListener('click', async () => {
   const email = document.getElementById('signupEmail').value.trim();
   const pass = document.getElementById('signupPass').value.trim();
+  const firstName = document.getElementById('signupFirstName').value.trim();
+  const lastName = document.getElementById('signupLastName').value.trim();
+  const dob = document.getElementById('signupDob').value;
+  const gender = document.getElementById('signupGender').value;
   const errorEl = document.getElementById('signupError');
   errorEl.textContent = '';
-  if (!email || pass.length < 6) {
-    errorEl.textContent = 'Enter valid email & password (6+ chars)';
+  if (!email || pass.length < 6 || !firstName || !lastName || !dob || !gender) {
+    errorEl.textContent = 'All fields are required';
     return;
   }
   try {
     const uc = await createUserWithEmailAndPassword(auth, email, pass);
     await sendEmailVerification(uc.user);
     const role = (email === OWNER_EMAIL) ? 'owner' : 'user';
-    await set(ref(db, 'users/' + uc.user.uid), { email, role });
+    await set(ref(db, 'users/' + uc.user.uid), { email, role, firstName, lastName, dob, gender });
     await signOut(auth);
     alert('Account created. Please verify your email (check Spam). You must verify before login.');
     showLogin('login');
     document.getElementById('signupEmail').value = '';
     document.getElementById('signupPass').value = '';
+    document.getElementById('signupFirstName').value = '';
+    document.getElementById('signupLastName').value = '';
+    document.getElementById('signupDob').value = '';
+    document.getElementById('signupGender').value = '';
   } catch (e) {
     errorEl.textContent = e.message.includes('email-already-in-use') ? 'Email already in use' : e.message;
   }
@@ -602,6 +647,17 @@ onAuthStateChanged(auth, async (user) => {
     await refreshRoleUI();
     await renderAll();
     showSection('home');
+    // Check for birthday
+    if (snap.exists()) {
+      const profile = snap.val();
+      if (profile.dob) {
+        const [y, m, d] = profile.dob.split('-');
+        const now = new Date();
+        if (now.getMonth() + 1 == parseInt(m) && now.getDate() == parseInt(d)) {
+          alert(`Happy Birthday, ${profile.firstName}! 🎉`);
+        }
+      }
+    }
   } else {
     authWrap.style.display = 'block';
     appWrap.style.display = 'none';
@@ -614,11 +670,20 @@ async function refreshRoleUI() {
   const role = await getRoleForCurrentUser();
   roleTag.textContent = role ? role.toUpperCase() : '—';
   document.querySelectorAll('.admin-panel').forEach(p => p.style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none');
-  document.getElementById('admins').style.display = (role === 'owner') ? 'block' : 'none';
+  document.getElementById('admins').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('details').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('adminManageControls').style.display = (role === 'owner') ? 'block' : 'none';
   document.getElementById('socialAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('complaintAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('aboutAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('positiveAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+
+  // Hide nav items for Manage Admins and User Details for users
+  const adminsNav = document.querySelector('.nav-item[data-target="admins"]');
+  const detailsNav = document.querySelector('.nav-item[data-target="details"]');
+  const display = (role === 'admin' || role === 'owner') ? 'flex' : 'none';
+  if (adminsNav) adminsNav.style.display = display;
+  if (detailsNav) detailsNav.style.display = display;
 }
 
 function esc(s) {
@@ -852,17 +917,23 @@ function inlineEditPost(key, data) {
 document.getElementById('uploadPositive').addEventListener('click', async () => {
   const title = document.getElementById('positiveTitle').value.trim();
   const text = document.getElementById('positiveText').value.trim();
-  const image = document.getElementById('positiveImage').value.trim();
+  const file = document.getElementById('positiveImageFile').files[0];
   if (!title || !text) {
     alert('Title & text required');
     return;
   }
   const role = await getRoleForCurrentUser();
   if (role === 'admin' || role === 'owner') {
+    let image = '';
+    if (file) {
+      const sRef = storageRef(storage, 'positives/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      image = await getDownloadURL(sRef);
+    }
     await push(ref(db, 'positives'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
     document.getElementById('positiveTitle').value = '';
     document.getElementById('positiveText').value = '';
-    document.getElementById('positiveImage').value = '';
+    document.getElementById('positiveImageFile').value = '';
     await renderPositives();
   } else alert('Only admins/owner can add positives');
 });
@@ -870,7 +941,7 @@ document.getElementById('uploadPositive').addEventListener('click', async () => 
 document.getElementById('clearPositive').addEventListener('click', () => {
   document.getElementById('positiveTitle').value = '';
   document.getElementById('positiveText').value = '';
-  document.getElementById('positiveImage').value = '';
+  document.getElementById('positiveImageFile').value = '';
 });
 
 async function renderPositives() {
@@ -892,8 +963,8 @@ async function renderPositives() {
         <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
         <div><span class="small-muted">👍</span> <span class="count" id="positlikes-${k}">0</span></div>
       </div>
-      <div style="margin-top:8px"><p>${esc(v.text)}</p></div>
-      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px">` : ''}
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
       <div class="controls">
         <button class="small-btn like-btn" id="positlikes-btn-${k}" data-collection="positives" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="positive" data-id="${k}">Comments</button>
@@ -949,7 +1020,7 @@ function inlineEditPositive(key, data) {
   form.innerHTML = `
     <input class="edit-title" value="${escAttr(data.title)}" />
     <textarea class="edit-content">${esc(data.text)}</textarea>
-    <input class="edit-image" value="${escAttr(data.image || '')}" placeholder="Image URL (optional)" />
+    <input class="edit-image-file" type="file" accept="image/*" />
     <div class="edit-controls">
       <button class="btn save">Save</button>
       <button class="small-btn cancel">Cancel</button>
@@ -964,10 +1035,16 @@ function inlineEditPositive(key, data) {
   form.querySelector('.save').onclick = async () => {
     const nt = form.querySelector('.edit-title').value.trim();
     const nc = form.querySelector('.edit-content').value.trim();
-    const ni = form.querySelector('.edit-image').value.trim();
+    const file = form.querySelector('.edit-image-file').files[0];
     if (!nt || !nc) {
       alert('Title & text required');
       return;
+    }
+    let ni = data.image || '';
+    if (file) {
+      const sRef = storageRef(storage, 'positives/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      ni = await getDownloadURL(sRef);
     }
     await update(ref(db, 'positives/' + key), { title: nt, text: nc, image: ni });
     await renderPositives();
@@ -1323,7 +1400,7 @@ document.getElementById('setSocialsBtn').addEventListener('click', async () => {
   const li = document.getElementById('socialLi').value.trim();
   document.getElementById('socialMsg').textContent = '';
   const role = await getRoleForCurrentUser();
-  if (role !== 'admin' && role === 'owner') {
+  if (role !== 'admin' && role !== 'owner') {
     document.getElementById('socialMsg').textContent = 'Only admins can set social links.';
     return;
   }
@@ -1428,8 +1505,8 @@ async function renderAdmins() {
   const cont = document.getElementById('adminsList');
   cont.innerHTML = '';
   const role = await getRoleForCurrentUser();
-  if (role !== 'owner') {
-    cont.innerHTML = '<div class="muted">Only owner can view admin list</div>';
+  if (role !== 'admin' && role !== 'owner') {
+    cont.innerHTML = '<div class="muted">Only admins/owner can view admin list</div>';
     return;
   }
   const usersSnap = await get(ref(db, 'users'));
@@ -1444,7 +1521,7 @@ async function renderAdmins() {
       row.style.alignItems = 'center';
       row.innerHTML = `<div>${esc(u.email)} <span class="small-muted">(${u.role})</span></div>`;
       const actions = document.createElement('div');
-      if (u.role === 'admin') {
+      if (u.role === 'admin' && role === 'owner') {
         const dem = document.createElement('button');
         dem.className = 'small-btn';
         dem.textContent = 'Make user';
@@ -1458,13 +1535,78 @@ async function renderAdmins() {
       } else {
         const info = document.createElement('span');
         info.className = 'small-muted';
-        info.textContent = 'Owner';
+        info.textContent = u.role.charAt(0).toUpperCase() + u.role.slice(1);
         actions.appendChild(info);
       }
       row.appendChild(actions);
       cont.appendChild(row);
     }
   });
+}
+
+let lastUsersSnap = null;
+
+function renderUserTable() {
+  const tbody = document.querySelector('#userTable tbody');
+  tbody.innerHTML = '';
+  const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
+  if (!lastUsersSnap || !lastUsersSnap.exists()) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found</td></tr>';
+    return;
+  }
+  let hasUsers = false;
+  lastUsersSnap.forEach(c => {
+    const u = c.val();
+    const uid = c.key;
+    const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+    const emailLower = u.email.toLowerCase();
+    if (searchTerm && !fullName.includes(searchTerm) && !emailLower.includes(searchTerm)) {
+      return;
+    }
+    hasUsers = true;
+    const row = document.createElement('tr');
+    row.setAttribute('data-uid', uid);
+    row.innerHTML = `
+      <td>${esc(u.email)}</td>
+      <td>${esc(u.firstName || '')}</td>
+      <td>${esc(u.lastName || '')}</td>
+      <td>${esc(u.dob || '')}</td>
+      <td>${esc(u.gender || '')}</td>
+      <td>${esc(u.role || '')}</td>
+      <td><button class="small-btn" style="background:#fee" onclick="deleteUser('${uid}')">Delete</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+  if (!hasUsers) {
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found matching search</td></tr>';
+  }
+}
+
+async function deleteUser(uid) {
+  if (confirm('Are you sure you want to delete this user account? This action cannot be undone.')) {
+    try {
+      await remove(ref(db, 'users/' + uid));
+      alert('User account deleted from database.');
+    } catch (e) {
+      alert('Error deleting user: ' + e.message);
+    }
+  }
+}
+
+async function renderDetails() {
+  const role = await getRoleForCurrentUser();
+  if (role !== 'admin' && role !== 'owner') {
+    return;
+  }
+  const usersRef = ref(db, 'users');
+  onValue(usersRef, (snap) => {
+    lastUsersSnap = snap;
+    renderUserTable();
+  });
+  const searchInput = document.getElementById('userSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', renderUserTable);
+  }
 }
 
 async function renderAll() {
@@ -1477,6 +1619,7 @@ async function renderAll() {
   await renderUserComplaints();
   await renderContact();
   await renderAbout();
+  await renderDetails();
 }
 
 document.addEventListener('visibilitychange', () => {});
