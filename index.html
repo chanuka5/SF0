@@ -178,6 +178,8 @@
   table { width: 100%; border-collapse: collapse; margin-top: 16px; }
   th, td { border: 1px solid var(--muted); padding: 8px; text-align: left; }
   th { background: var(--nav-active); }
+  .notification-item { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .notification-item:last-child { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -240,8 +242,16 @@
     </div>
 
     <div class="top-right">
+      <div class="notification-wrapper">
+        <button id="notifToggle" class="small-btn" style="background:transparent; font-size:20px">🔔</button>
+        <span id="notifCount" class="tag" style="display:none; margin-left:-10px; background:var(--danger); color:white; border-radius:50%; padding:2px 6px; font-size:12px">0</span>
+      </div>
       <div class="inline-muted" id="currentEmail">Not signed</div>
     </div>
+  </div>
+  <div id="notifDropdown" style="display:none; position:absolute; right:16px; top:60px; width:300px; max-height:400px; overflow:auto; background:var(--card); border-radius:12px; padding:12px; box-shadow:0 8px 24px rgba(2,6,23,0.04); z-index:1000">
+    <h4 style="margin:0 0 8px 0">Notifications</h4>
+    <div id="notifList"></div>
   </div>
 
   <div class="layout">
@@ -404,7 +414,6 @@
               <th>DOB</th>
               <th>Gender</th>
               <th>Role</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -505,7 +514,7 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
     const uc = await createUserWithEmailAndPassword(auth, email, pass);
     await sendEmailVerification(uc.user);
     const role = (email === OWNER_EMAIL) ? 'owner' : 'user';
-    await set(ref(db, 'users/' + uc.user.uid), { email, role, firstName, lastName, dob, gender });
+    await set(ref(db, 'users/' + uc.user.uid), { email, role, firstName, lastName, dob, gender, createdAt: Date.now() });
     await signOut(auth);
     alert('Account created. Please verify your email (check Spam). You must verify before login.');
     showLogin('login');
@@ -654,7 +663,11 @@ onAuthStateChanged(auth, async (user) => {
         const [y, m, d] = profile.dob.split('-');
         const now = new Date();
         if (now.getMonth() + 1 == parseInt(m) && now.getDate() == parseInt(d)) {
-          alert(`Happy Birthday, ${profile.firstName}! 🎉`);
+          const today = now.toDateString();
+          if (profile.birthdayNotifSent !== today) {
+            await notifyUser(user.uid, `Happy Birthday, ${profile.firstName}! 🎉`);
+            await update(ref(db, 'users/' + user.uid), { birthdayNotifSent: today });
+          }
         }
       }
     }
@@ -709,6 +722,7 @@ document.getElementById('uploadVideo').addEventListener('click', async () => {
   const role = await getRoleForCurrentUser();
   if (role === 'admin' || role === 'owner') {
     await push(ref(db, 'videos'), { title, url: urlInput, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New video added: ${title}`);
     document.getElementById('videoTitle').value = '';
     document.getElementById('videoUrl').value = '';
     await renderVideos();
@@ -808,6 +822,7 @@ document.getElementById('uploadPost').addEventListener('click', async () => {
   const role = await getRoleForCurrentUser();
   if (role === 'admin' || role === 'owner') {
     await push(ref(db, 'posts'), { title, content, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New post added: ${title}`);
     document.getElementById('postTitle').value = '';
     document.getElementById('postText').value = '';
     await renderPosts();
@@ -931,6 +946,7 @@ document.getElementById('uploadPositive').addEventListener('click', async () => 
       image = await getDownloadURL(sRef);
     }
     await push(ref(db, 'positives'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New positive thinking post added: ${title}`);
     document.getElementById('positiveTitle').value = '';
     document.getElementById('positiveText').value = '';
     document.getElementById('positiveImageFile').value = '';
@@ -1052,14 +1068,83 @@ function inlineEditPositive(key, data) {
 }
 
 async function renderGrowth() {
+  const snap = await get(ref(db, 'users'));
+  let users = [];
+  snap.forEach(c => {
+    const u = c.val();
+    if (u.createdAt) users.push(u.createdAt);
+  });
+  users.sort();
+  if (users.length === 0) {
+    // Fallback to hardcoded if no data
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+        datasets: [{
+          label: 'Site Users Growth',
+          data: [10, 20, 35, 50, 70, 100, 150, 220, 310, 450],
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
+          backgroundColor: 'rgba(0, 122, 255, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
+          pointBorderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: {
+          duration: 1000,
+          easing: 'easeOutQuart'
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Number of Users' },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+          },
+          x: {
+            title: { display: true, text: 'Month' },
+            grid: { display: false }
+          }
+        },
+        plugins: {
+          legend: { position: 'top' },
+          tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff' }
+        }
+      }
+    });
+    return;
+  }
+  const minDate = new Date(Math.min(...users));
+  const maxDate = new Date();
+  let labels = [];
+  let data = [];
+  let current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+  let count = 0;
+  let i = 0;
+  while (current <= maxDate) {
+    const monthStr = current.toLocaleString('default', { month: 'short', year: 'numeric' });
+    labels.push(monthStr);
+    const nextMonth = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+    while (i < users.length && users[i] < nextMonth.getTime()) {
+      count++;
+      i++;
+    }
+    data.push(count);
+    current = nextMonth;
+  }
   const ctx = document.getElementById('growthChart').getContext('2d');
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
+      labels: labels,
       datasets: [{
         label: 'Site Users Growth',
-        data: [10, 20, 35, 50, 70, 100, 150, 220, 310, 450],
+        data: data,
         borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
         backgroundColor: 'rgba(0, 122, 255, 0.1)',
         fill: true,
@@ -1294,6 +1379,7 @@ async function renderComplaints() {
           repliedByEmail: u.email,
           seen: true
         });
+        await notifyUser(cm.uid, 'Admin replied to your complaint');
         renderComplaints();
         renderUserComplaints();
       };
@@ -1551,7 +1637,7 @@ function renderUserTable() {
   tbody.innerHTML = '';
   const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
   if (!lastUsersSnap || !lastUsersSnap.exists()) {
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">No users found</td></tr>';
     return;
   }
   let hasUsers = false;
@@ -1573,23 +1659,11 @@ function renderUserTable() {
       <td>${esc(u.dob || '')}</td>
       <td>${esc(u.gender || '')}</td>
       <td>${esc(u.role || '')}</td>
-      <td><button class="small-btn" style="background:#fee" onclick="deleteUser('${uid}')">Delete</button></td>
     `;
     tbody.appendChild(row);
   });
   if (!hasUsers) {
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found matching search</td></tr>';
-  }
-}
-
-async function deleteUser(uid) {
-  if (confirm('Are you sure you want to delete this user account? This action cannot be undone.')) {
-    try {
-      await remove(ref(db, 'users/' + uid));
-      alert('User account deleted from database.');
-    } catch (e) {
-      alert('Error deleting user: ' + e.message);
-    }
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">No users found matching search</td></tr>';
   }
 }
 
@@ -1609,6 +1683,80 @@ async function renderDetails() {
   }
 }
 
+async function notifyAllUsers(message) {
+  const snap = await get(ref(db, 'users'));
+  snap.forEach(c => {
+    const uid = c.key;
+    push(ref(db, 'notifications/' + uid), { message, timestamp: Date.now(), read: false });
+  });
+}
+
+async function notifyUser(uid, message) {
+  push(ref(db, 'notifications/' + uid), { message, timestamp: Date.now(), read: false });
+}
+
+function renderNotifications() {
+  const u = auth.currentUser;
+  if (!u) return;
+  const notifRef = ref(db, 'notifications/' + u.uid);
+  onValue(notifRef, (snap) => {
+    const list = document.getElementById('notifList');
+    const countEl = document.getElementById('notifCount');
+    list.innerHTML = '';
+    if (!snap.exists()) {
+      list.innerHTML = '<div class="muted">No notifications</div>';
+      countEl.style.display = 'none';
+      return;
+    }
+    let notifs = [];
+    let unread = 0;
+    snap.forEach(c => {
+      const n = c.val();
+      n.key = c.key;
+      notifs.push(n);
+      if (!n.read) unread++;
+    });
+    notifs.sort((a, b) => b.timestamp - a.timestamp);
+    notifs.forEach(n => {
+      const div = document.createElement('div');
+      div.className = 'notification-item';
+      div.style.fontWeight = n.read ? 'normal' : 'bold';
+      div.innerHTML = `
+        <div>${esc(n.message)}</div>
+        <div class="small-muted">${new Date(n.timestamp).toLocaleString()}</div>
+      `;
+      list.appendChild(div);
+    });
+    if (unread > 0) {
+      countEl.textContent = unread;
+      countEl.style.display = 'inline-block';
+    } else {
+      countEl.style.display = 'none';
+    }
+  });
+}
+
+document.getElementById('notifToggle').addEventListener('click', async () => {
+  const dropdown = document.getElementById('notifDropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  if (dropdown.style.display === 'block') {
+    // Mark all as read
+    const snap = await get(ref(db, 'notifications/' + auth.currentUser.uid));
+    if (snap.exists()) {
+      const updates = {};
+      snap.forEach(c => {
+        if (!c.val().read) {
+          updates[c.key + '/read'] = true;
+        }
+      });
+      if (Object.keys(updates).length > 0) {
+        await update(ref(db, 'notifications/' + auth.currentUser.uid), updates);
+      }
+    }
+    document.getElementById('notifCount').style.display = 'none';
+  }
+});
+
 async function renderAll() {
   await renderVideos();
   await renderPosts();
@@ -1620,6 +1768,7 @@ async function renderAll() {
   await renderContact();
   await renderAbout();
   await renderDetails();
+  renderNotifications();
 }
 
 document.addEventListener('visibilitychange', () => {});
