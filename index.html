@@ -1,3 +1,4 @@
+<DOCUMENT filename="index.html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -207,6 +208,7 @@
       <input id="signupFirstName" type="text" placeholder="First Name" style="margin-top:8px" />
       <input id="signupLastName" type="text" placeholder="Last Name" style="margin-top:8px" />
       <input id="signupDob" type="date" placeholder="Date of Birth" style="margin-top:8px" />
+      <input id="signupContact" type="tel" placeholder="Contact Number" style="margin-top:8px" />
       <select id="signupGender" style="margin-top:8px">
         <option value="">Select Gender</option>
         <option value="male">Male</option>
@@ -413,6 +415,7 @@
               <th>Last Name</th>
               <th>DOB</th>
               <th>Gender</th>
+              <th>Contact Number</th>
               <th>Role</th>
             </tr>
           </thead>
@@ -503,10 +506,11 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
   const firstName = document.getElementById('signupFirstName').value.trim();
   const lastName = document.getElementById('signupLastName').value.trim();
   const dob = document.getElementById('signupDob').value;
+  const contact = document.getElementById('signupContact').value.trim();
   const gender = document.getElementById('signupGender').value;
   const errorEl = document.getElementById('signupError');
   errorEl.textContent = '';
-  if (!email || pass.length < 6 || !firstName || !lastName || !dob || !gender) {
+  if (!email || pass.length < 6 || !firstName || !lastName || !dob || !contact || !gender) {
     errorEl.textContent = 'All fields are required';
     return;
   }
@@ -514,7 +518,7 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
     const uc = await createUserWithEmailAndPassword(auth, email, pass);
     await sendEmailVerification(uc.user);
     const role = (email === OWNER_EMAIL) ? 'owner' : 'user';
-    await set(ref(db, 'users/' + uc.user.uid), { email, role, firstName, lastName, dob, gender, createdAt: Date.now() });
+    await set(ref(db, 'users/' + uc.user.uid), { email, role, firstName, lastName, dob, contact, gender, createdAt: Date.now() });
     await signOut(auth);
     alert('Account created. Please verify your email (check Spam). You must verify before login.');
     showLogin('login');
@@ -523,6 +527,7 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
     document.getElementById('signupFirstName').value = '';
     document.getElementById('signupLastName').value = '';
     document.getElementById('signupDob').value = '';
+    document.getElementById('signupContact').value = '';
     document.getElementById('signupGender').value = '';
   } catch (e) {
     errorEl.textContent = e.message.includes('email-already-in-use') ? 'Email already in use' : e.message;
@@ -545,6 +550,8 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       errorEl.textContent = 'Please verify your email before logging in.';
       return;
     }
+    localStorage.setItem('session_start', Date.now());
+    await update(ref(db, 'users/' + uc.user.uid), { last_login: Date.now() });
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
   } catch (e) {
@@ -575,6 +582,7 @@ document.getElementById('sendReset').addEventListener('click', async () => {
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   try {
+    localStorage.removeItem('session_start');
     await signOut(auth);
   } catch (e) {
     alert('Error signing out: ' + e.message);
@@ -640,9 +648,14 @@ async function getRoleForCurrentUser() {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    currentEmail.textContent = user.email;
-    authWrap.style.display = 'none';
-    appWrap.style.display = 'block';
+    const sessionStart = parseInt(localStorage.getItem('session_start') || '0');
+    const sevenHours = 7 * 60 * 60 * 1000;
+    if (sessionStart === 0 || Date.now() - sessionStart > sevenHours) {
+      localStorage.removeItem('session_start');
+      await signOut(auth);
+      alert('Your session has expired. Please log in again.');
+      return;
+    }
     const uRef = ref(db, 'users/' + user.uid);
     const snap = await get(uRef);
     if (!snap.exists()) {
@@ -653,6 +666,9 @@ onAuthStateChanged(auth, async (user) => {
         await update(uRef, { role: 'owner' });
       }
     }
+    currentEmail.textContent = user.email;
+    authWrap.style.display = 'none';
+    appWrap.style.display = 'block';
     await refreshRoleUI();
     await renderAll();
     showSection('home');
@@ -1637,7 +1653,7 @@ function renderUserTable() {
   tbody.innerHTML = '';
   const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
   if (!lastUsersSnap || !lastUsersSnap.exists()) {
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">No users found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found</td></tr>';
     return;
   }
   let hasUsers = false;
@@ -1658,12 +1674,13 @@ function renderUserTable() {
       <td>${esc(u.lastName || '')}</td>
       <td>${esc(u.dob || '')}</td>
       <td>${esc(u.gender || '')}</td>
+      <td>${esc(u.contact || '')}</td>
       <td>${esc(u.role || '')}</td>
     `;
     tbody.appendChild(row);
   });
   if (!hasUsers) {
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">No users found matching search</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found matching search</td></tr>';
   }
 }
 
@@ -1776,3 +1793,4 @@ document.getElementById('app').style.display = 'none';
 </script>
 </body>
 </html>
+</DOCUMENT>
