@@ -185,50 +185,30 @@
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    color: white;
-  }
-  .category-card:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 30px var(--blue);
-  }
-  .category-card::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 80%);
-    animation: rotate 10s linear infinite;
-  }
-  @keyframes rotate {
-    to { transform: rotate(360deg); }
-  }
-  .category-card[data-cat="sports"] {
-    background: linear-gradient(135deg, #00b140, #007d00);
-  }
-  .category-card[data-cat="technology"] {
-    background: linear-gradient(135deg, #2196f3, #0d47a1);
-  }
-  .category-card[data-cat="business"] {
-    background: linear-gradient(135deg, #f44336, #b71c1c);
-  }
-  .category-card[data-cat="others"] {
-    background: linear-gradient(135deg, #9c27b0, #6a1b9a);
-  }
-  .category-card h4 {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
-    transition: letter-spacing 0.3s ease;
+    color: var(--text);
+    background: var(--card);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
+    border: 1px solid var(--muted);
+  }
+  .category-card:hover {
+    box-shadow: 0 0 30px var(--blue);
+  }
+  .category-card h4 {
+    text-shadow: none;
+    transition: none;
+    margin: 0;
   }
   .category-card:hover h4 {
-    letter-spacing: 2px;
+    letter-spacing: 0;
   }
   .category-card .icon {
-    display: inline-block;
-    animation: bounce 1s infinite;
+    font-size: 1.2em;
+    color: var(--blue);
   }
 </style>
 </head>
@@ -282,6 +262,25 @@
       <div id="resetMsg" class="inline-muted" style="margin-top:8px"></div>
       <div id="resetError" class="error"></div>
     </div>
+
+    <div id="detailsView" style="display:none">
+      <h2 style="margin:0 0 8px 0">Complete Profile</h2>
+      <div id="detailsEmail" class="muted"></div>
+      <input id="detailsFirstName" type="text" placeholder="First Name" style="margin-top:8px" />
+      <input id="detailsLastName" type="text" placeholder="Last Name" style="margin-top:8px" />
+      <input id="detailsDob" type="date" placeholder="Date of Birth" style="margin-top:8px" />
+      <input id="detailsContact" type="tel" placeholder="Contact Number" style="margin-top:8px" />
+      <select id="detailsGender" style="margin-top:8px">
+        <option value="">Select Gender</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+      </select>
+      <div class="row" style="margin-top:10px">
+        <button id="saveDetailsBtn" class="btn">Save Details</button>
+      </div>
+      <div id="detailsError" class="error"></div>
+    </div>
   </div>
 </div>
 
@@ -334,6 +333,10 @@
     <main class="content">
       <section id="home" class="card" style="display:block">
         <div class="flex-between">
+          <h3 style="margin:0">Current Weather</h3>
+        </div>
+        <div id="weatherContent" class="muted">Loading...</div>
+        <div class="flex-between">
           <h3 style="margin:0">Welcome</h3>
           <div class="tag" id="roleTag">—</div>
         </div>
@@ -357,17 +360,17 @@
             <div class="small-muted">Explore categories</div>
           </div>
           <div class="row" style="margin-top:16px; justify-content:space-around;">
-            <div class="category-card pulse ai-glow" data-cat="sports" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
-              <h4 style="margin:0"><span class="icon">⚽</span> Sports</h4>
+            <div class="category-card" data-cat="sports">
+              <h4><span class="icon">⚽</span> Sports</h4>
             </div>
-            <div class="category-card pulse ai-glow" data-cat="technology" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
-              <h4 style="margin:0"><span class="icon">💻</span> Technology</h4>
+            <div class="category-card" data-cat="technology">
+              <h4><span class="icon">💻</span> Technology</h4>
             </div>
-            <div class="category-card pulse ai-glow" data-cat="business" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
-              <h4 style="margin:0"><span class="icon">💼</span> Business</h4>
+            <div class="category-card" data-cat="business">
+              <h4><span class="icon">💼</span> Business</h4>
             </div>
-            <div class="category-card pulse ai-glow" data-cat="others" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
-              <h4 style="margin:0"><span class="icon">🌐</span> Others</h4>
+            <div class="category-card" data-cat="others">
+              <h4><span class="icon">🌐</span> Others</h4>
             </div>
           </div>
         </div>
@@ -486,6 +489,8 @@
               <th>Gender</th>
               <th>Contact Number</th>
               <th>Role</th>
+              <th>Created At</th>
+              <th>Last Login</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -647,6 +652,7 @@ const showLogin = id => {
   document.getElementById('loginView').style.display = id === 'login' ? 'block' : 'none';
   document.getElementById('signupView').style.display = id === 'signup' ? 'block' : 'none';
   document.getElementById('resetView').style.display = id === 'reset' ? 'block' : 'none';
+  document.getElementById('detailsView').style.display = id === 'details' ? 'block' : 'none';
 };
 
 document.getElementById('showSignup').onclick = () => showLogin('signup');
@@ -704,7 +710,6 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
       errorEl.textContent = 'Please verify your email before logging in.';
       return;
     }
-    localStorage.setItem('session_start', Date.now());
     await update(ref(db, 'users/' + uc.user.uid), { last_login: Date.now() });
     document.getElementById('loginEmail').value = '';
     document.getElementById('loginPass').value = '';
@@ -734,9 +739,46 @@ document.getElementById('sendReset').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('saveDetailsBtn').addEventListener('click', async () => {
+  const firstName = document.getElementById('detailsFirstName').value.trim();
+  const lastName = document.getElementById('detailsLastName').value.trim();
+  const dob = document.getElementById('detailsDob').value;
+  const contact = document.getElementById('detailsContact').value.trim();
+  const gender = document.getElementById('detailsGender').value;
+  const errorEl = document.getElementById('detailsError');
+  errorEl.textContent = '';
+  if (!firstName || !lastName || !dob || !contact || !gender) {
+    errorEl.textContent = 'All fields are required';
+    return;
+  }
+  const u = auth.currentUser;
+  await update(ref(db, 'users/' + u.uid), { firstName, lastName, dob, contact, gender });
+  authWrap.style.display = 'none';
+  appWrap.style.display = 'block';
+  currentEmail.textContent = u.email;
+  await refreshRoleUI();
+  await renderAll();
+  showSection('home');
+  // Check for birthday
+  const snap = await get(ref(db, 'users/' + u.uid));
+  if (snap.exists()) {
+    const profile = snap.val();
+    if (profile.dob) {
+      const [y, m, d] = profile.dob.split('-');
+      const now = new Date();
+      if (now.getMonth() + 1 == parseInt(m) && now.getDate() == parseInt(d)) {
+        const today = now.toDateString();
+        if (profile.birthdayNotifSent !== today) {
+          await notifyUser(u.uid, `Happy Birthday, ${profile.firstName}! 🎉`);
+          await update(ref(db, 'users/' + u.uid), { birthdayNotifSent: today });
+        }
+      }
+    }
+  }
+});
+
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   try {
-    localStorage.removeItem('session_start');
     await signOut(auth);
   } catch (e) {
     alert('Error signing out: ' + e.message);
@@ -817,44 +859,46 @@ async function getRoleForCurrentUser() {
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    const sessionStart = parseInt(localStorage.getItem('session_start') || '0');
-    const sevenHours = 7 * 60 * 60 * 1000;
-    if (sessionStart === 0 || Date.now() - sessionStart > sevenHours) {
-      localStorage.removeItem('session_start');
-      await signOut(auth);
-      alert('Your session has expired. Please log in again.');
-      return;
-    }
     const uRef = ref(db, 'users/' + user.uid);
     const snap = await get(uRef);
     if (!snap.exists()) {
       const role = (user.email === OWNER_EMAIL) ? 'owner' : 'user';
-      await set(uRef, { email: user.email, role });
+      await set(uRef, { email: user.email, role, createdAt: Date.now() });
+      authWrap.style.display = 'block';
+      appWrap.style.display = 'none';
+      showLogin('details');
+      document.getElementById('detailsEmail').textContent = 'Email: ' + user.email;
     } else {
-      if (user.email === OWNER_EMAIL && snap.val().role !== 'owner') {
-        await update(uRef, { role: 'owner' });
-      }
-    }
-    currentEmail.textContent = user.email;
-    authWrap.style.display = 'none';
-    appWrap.style.display = 'block';
-    await refreshRoleUI();
-    await renderAll();
-    showSection('home');
-    // Check for birthday
-    if (snap.exists()) {
       const profile = snap.val();
-      if (profile.dob) {
-        const [y, m, d] = profile.dob.split('-');
-        const now = new Date();
-        if (now.getMonth() + 1 == parseInt(m) && now.getDate() == parseInt(d)) {
-          const today = now.toDateString();
-          if (profile.birthdayNotifSent !== today) {
-            await notifyUser(user.uid, `Happy Birthday, ${profile.firstName}! 🎉`);
-            await update(ref(db, 'users/' + user.uid), { birthdayNotifSent: today });
+      if (!profile.firstName || !profile.lastName || !profile.dob || !profile.contact || !profile.gender) {
+        authWrap.style.display = 'block';
+        appWrap.style.display = 'none';
+        showLogin('details');
+        document.getElementById('detailsEmail').textContent = 'Email: ' + user.email;
+      } else {
+        authWrap.style.display = 'none';
+        appWrap.style.display = 'block';
+        currentEmail.textContent = user.email;
+        await refreshRoleUI();
+        await renderAll();
+        showSection('home');
+        // Check for birthday
+        if (profile.dob) {
+          const [y, m, d] = profile.dob.split('-');
+          const now = new Date();
+          if (now.getMonth() + 1 == parseInt(m) && now.getDate() == parseInt(d)) {
+            const today = now.toDateString();
+            if (profile.birthdayNotifSent !== today) {
+              await notifyUser(user.uid, `Happy Birthday, ${profile.firstName}! 🎉`);
+              await update(ref(db, 'users/' + user.uid), { birthdayNotifSent: today });
+            }
           }
         }
       }
+      if (user.email === OWNER_EMAIL && profile.role !== 'owner') {
+        await update(uRef, { role: 'owner' });
+      }
+      await update(uRef, { last_login: Date.now() });
     }
   } else {
     authWrap.style.display = 'block';
@@ -1015,7 +1059,7 @@ document.getElementById('uploadPost').addEventListener('click', async () => {
     document.getElementById('postTitle').value = '';
     document.getElementById('postText').value = '';
     await renderPosts();
-  } else alert('Only admins/owner can upload posts');
+  } else alert('Only admins/owner can create posts');
 });
 
 document.getElementById('clearPost').addEventListener('click', () => {
@@ -1032,6 +1076,7 @@ async function renderPosts() {
     return;
   }
   const role = await getRoleForCurrentUser();
+
   snap.forEach(child => {
     const p = child.val();
     const k = child.key;
@@ -1042,7 +1087,7 @@ async function renderPosts() {
         <div><strong>${esc(p.title)}</strong><div class="small-muted">Posted: ${new Date(p.createdAt).toLocaleString()}</div></div>
         <div><span class="small-muted">👍</span> <span class="count" id="plikes-${k}">0</span></div>
       </div>
-      <div style="margin-top:8px"><p>${esc(p.content)}</p></div>
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(p.content)}</p></div>
       <div class="controls">
         <button class="small-btn like-btn" id="plikes-btn-${k}" data-collection="posts" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="post" data-id="${k}">Comments</button>
@@ -1110,7 +1155,7 @@ function inlineEditPost(key, data) {
     const nt = form.querySelector('.edit-title').value.trim();
     const nc = form.querySelector('.edit-content').value.trim();
     if (!nt || !nc) {
-      alert('Title & content required');
+      alert('Title & text required');
       return;
     }
     await update(ref(db, 'posts/' + key), { title: nt, content: nc });
@@ -1135,7 +1180,7 @@ document.getElementById('uploadPositive').addEventListener('click', async () => 
       image = await getDownloadURL(sRef);
     }
     await push(ref(db, 'positives'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New positive thinking post added: ${title}`);
+    await notifyAllUsers(`New positive added: ${title}`);
     document.getElementById('positiveTitle').value = '';
     document.getElementById('positiveText').value = '';
     document.getElementById('positiveImageFile').value = '';
@@ -1154,22 +1199,22 @@ async function renderPositives() {
   listEl.innerHTML = '';
   const snap = await get(ref(db, 'positives'));
   if (!snap.exists()) {
-    listEl.innerHTML = '<div class="muted">No positive items yet</div>';
+    listEl.innerHTML = '<div class="muted">No positives yet</div>';
     return;
   }
   const role = await getRoleForCurrentUser();
   snap.forEach(child => {
-    const v = child.val();
+    const p = child.val();
     const k = child.key;
     const wrapper = document.createElement('div');
     wrapper.className = 'positive fade-in';
     wrapper.innerHTML = `
       <div class="flex-between">
-        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
+        <div><strong>${esc(p.title)}</strong><div class="small-muted">Added: ${new Date(p.createdAt).toLocaleString()}</div></div>
         <div><span class="small-muted">👍</span> <span class="count" id="positlikes-${k}">0</span></div>
       </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
-      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(p.text)}</p></div>
+      ${p.image ? `<img src="${escAttr(p.image)}" alt="${esc(p.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
       <div class="controls">
         <button class="small-btn like-btn" id="positlikes-btn-${k}" data-collection="positives" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="positive" data-id="${k}">Comments</button>
@@ -1189,7 +1234,7 @@ async function renderPositives() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditPositive(k, v);
+      edit.onclick = () => inlineEditPositive(k, p);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1258,102 +1303,44 @@ function inlineEditPositive(key, data) {
 
 async function renderGrowth() {
   const snap = await get(ref(db, 'users'));
-  let users = [];
+  const users = [];
   snap.forEach(c => {
     const u = c.val();
-    if (u.createdAt) users.push(u.createdAt);
+    if (u.createdAt) users.push({ createdAt: u.createdAt });
   });
-  users.sort();
-  if (users.length === 0) {
-    // Fallback to hardcoded if no data
-    const ctx = document.getElementById('growthChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'],
-        datasets: [{
-          label: 'Site Users Growth',
-          data: [10, 20, 35, 50, 70, 100, 150, 220, 310, 450],
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
-          backgroundColor: 'rgba(0, 122, 255, 0.1)',
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#fff',
-          pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
-          pointBorderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        animation: {
-          duration: 1000,
-          easing: 'easeOutQuart'
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: 'Number of Users' },
-            grid: { color: 'rgba(0,0,0,0.05)' }
-          },
-          x: {
-            title: { display: true, text: 'Month' },
-            grid: { display: false }
-          }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff' }
-        }
-      }
-    });
-    return;
-  }
-  const minDate = new Date(Math.min(...users));
-  const maxDate = new Date();
-  let labels = [];
-  let data = [];
-  let current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-  let count = 0;
-  let i = 0;
-  while (current <= maxDate) {
-    const monthStr = current.toLocaleString('default', { month: 'short', year: 'numeric' });
-    labels.push(monthStr);
-    const nextMonth = new Date(current.getFullYear(), current.getMonth() + 1, 1);
-    while (i < users.length && users[i] < nextMonth.getTime()) {
-      count++;
-      i++;
-    }
-    data.push(count);
-    current = nextMonth;
-  }
+  users.sort((a, b) => a.createdAt - b.createdAt);
+
+  const monthlyCounts = {};
+  users.forEach(u => {
+    const date = new Date(u.createdAt);
+    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+  });
+
+  const labels = Object.keys(monthlyCounts).sort();
+  const data = labels.map(m => monthlyCounts[m]);
+
   const ctx = document.getElementById('growthChart').getContext('2d');
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
+      labels,
       datasets: [{
-        label: 'Site Users Growth',
-        data: data,
-        borderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
-        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+        label: 'New Users per Month',
+        data,
         fill: true,
-        tension: 0.4,
-        pointBackgroundColor: '#fff',
-        pointBorderColor: getComputedStyle(document.documentElement).getPropertyValue('--blue').trim(),
-        pointBorderWidth: 2
+        backgroundColor: 'rgba(0, 122, 255, 0.2)',
+        borderColor: 'rgba(0, 122, 255, 1)',
+        tension: 0.4
       }]
     },
     options: {
       responsive: true,
-      animation: {
-        duration: 1000,
-        easing: 'easeOutQuart'
-      },
       scales: {
         y: {
           beginAtZero: true,
-          title: { display: true, text: 'Number of Users' },
-          grid: { color: 'rgba(0,0,0,0.05)' }
+          title: { display: true, text: 'New Users' },
+          grid: { display: true }
         },
         x: {
           title: { display: true, text: 'Month' },
@@ -1575,7 +1562,7 @@ async function renderComplaints() {
           repliedByEmail: u.email,
           seen: true
         });
-        await notifyUser(cm.uid, 'Admin replied to your complaint');
+        await notifyUser(u.uid, 'Admin replied to your complaint');
         renderComplaints();
         renderUserComplaints();
       };
@@ -1833,7 +1820,7 @@ function renderUserTable() {
   tbody.innerHTML = '';
   const searchTerm = document.getElementById('userSearch').value.trim().toLowerCase();
   if (!lastUsersSnap || !lastUsersSnap.exists()) {
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="muted">No users found</td></tr>';
     return;
   }
   let hasUsers = false;
@@ -1856,11 +1843,13 @@ function renderUserTable() {
       <td>${esc(u.gender || '')}</td>
       <td>${esc(u.contact || '')}</td>
       <td>${esc(u.role || '')}</td>
+      <td>${u.createdAt ? new Date(u.createdAt).toLocaleString() : ''}</td>
+      <td>${u.last_login ? new Date(u.last_login).toLocaleString() : ''}</td>
     `;
     tbody.appendChild(row);
   });
   if (!hasUsers) {
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">No users found matching search</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="muted">No users found matching search</td></tr>';
   }
 }
 
@@ -2508,6 +2497,31 @@ function inlineEditOthers(key, data) {
     await update(ref(db, 'worldnews/others/' + key), { title: nt, text: nc, image: ni });
     await renderOthers();
   };
+}
+
+async function renderWeather() {
+  const content = document.getElementById('weatherContent');
+  content.innerHTML = 'Loading...';
+  try {
+    const res = await fetch('https://wttr.in/Colombo?format=j1');
+    const data = await res.json();
+    const current = data.current_condition[0];
+    const temp = current.temp_C;
+    const desc = current.weatherDesc[0].value;
+    let icon = '';
+    if (desc.toLowerCase().includes('sun')) icon = '☀️';
+    else if (desc.toLowerCase().includes('cloud')) icon = '☁️';
+    else if (desc.toLowerCase().includes('rain')) icon = '🌧️';
+    else if (desc.toLowerCase().includes('snow')) icon = '❄️';
+    else icon = '🌤️';
+    content.innerHTML = `
+      <p>Temperature: ${temp}°C</p>
+      <p>Condition: ${desc}</p>
+      <div style="font-size:50px">${icon}</div>
+    `;
+  } catch (e) {
+    content.innerHTML = 'Error loading weather';
+  }
 }
 
 async function renderAll() {
