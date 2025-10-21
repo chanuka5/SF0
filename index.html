@@ -1,4 +1,3 @@
-<DOCUMENT filename="index.html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -354,25 +353,8 @@
         </div>
         <p class="welcome-message">Welcome to SF0</p>
         <p class="muted">Use the sidebar to navigate and explore our features.</p>
-        <div style="margin-top: 32px;">
-          <div class="flex-between">
-            <h3 style="margin:0">World News</h3>
-            <div class="small-muted">Explore categories</div>
-          </div>
-          <div class="row" style="margin-top:16px; justify-content:space-around;">
-            <div class="category-card" data-cat="sports">
-              <h4><span class="icon">⚽</span> Sports</h4>
-            </div>
-            <div class="category-card" data-cat="technology">
-              <h4><span class="icon">💻</span> Technology</h4>
-            </div>
-            <div class="category-card" data-cat="business">
-              <h4><span class="icon">💼</span> Business</h4>
-            </div>
-            <div class="category-card" data-cat="others">
-              <h4><span class="icon">🌐</span> Others</h4>
-            </div>
-          </div>
+        <div style="margin-top: 32px; text-align:center">
+          <button class="btn ai-glow" id="worldnewsBtn">Explore World News</button>
         </div>
       </section>
 
@@ -615,6 +597,20 @@
         <div id="othersList" style="margin-top:12px"></div>
       </section>
 
+      <section id="worldnews" class="card" style="display:none">
+        <div class="flex-between">
+          <h3 style="margin:0" class="ai-glow">World News</h3>
+          <button class="small-btn back-wn">Back to Home</button>
+        </div>
+        <div class="muted">Choose a category</div>
+        <div class="nav" style="flex-direction:row; justify-content:space-around; margin-top:16px;">
+          <div class="nav-item" data-target="sports" style="flex:1; text-align:center"><div class="icon">⚽</div><div class="label">Sports</div></div>
+          <div class="nav-item" data-target="technology" style="flex:1; text-align:center"><div class="icon">💻</div><div class="label">Technology</div></div>
+          <div class="nav-item" data-target="business" style="flex:1; text-align:center"><div class="icon">💼</div><div class="label">Business</div></div>
+          <div class="nav-item" data-target="others" style="flex:1; text-align:center"><div class="icon">🌐</div><div class="label">Others</div></div>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -804,6 +800,7 @@ function showSection(id) {
   }
   setActiveNav(id);
   if (window.innerWidth <= 900) closeSidebar();
+  if (id === 'home') renderWeather();
   if (id === 'sports') renderSports();
   if (id === 'technology') renderTechnology();
   if (id === 'business') renderBusiness();
@@ -838,10 +835,8 @@ window.addEventListener('resize', () => {
   if (window.innerWidth > 900) closeSidebar();
 });
 
-document.querySelectorAll('.category-card').forEach(card => {
-  card.addEventListener('click', () => {
-    showSection(card.dataset.cat);
-  });
+document.getElementById('worldnewsBtn').addEventListener('click', () => {
+  showSection('worldnews');
 });
 document.querySelectorAll('.back-wn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1013,24 +1008,13 @@ async function renderVideos() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = async () => {
-        const nt = prompt('New title', v.title);
-        const nu = prompt('New YouTube URL', v.url);
-        if (nt && nu) {
-          if (!nu.includes('youtube.com/') && !nu.includes('youtu.be/')) {
-            alert('Invalid YouTube URL.');
-            return;
-          }
-          await update(ref(db, 'videos/' + k), { title: nt, url: nu });
-          renderVideos();
-        }
-      };
+      edit.onclick = () => inlineEditVideos(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
       del.textContent = 'Delete';
       del.onclick = async () => {
-        if (confirm('Delete this video?')) {
+        if (confirm('Delete video?')) {
           await remove(ref(db, 'videos/' + k));
           renderVideos();
         }
@@ -1045,17 +1029,53 @@ async function renderVideos() {
   });
 }
 
+function inlineEditVideos(key, data) {
+  const wrapper = document.querySelector(`#videoList .video .like-btn[data-id="${key}"]`)?.closest('.video');
+  if (!wrapper) {
+    renderVideos();
+    return;
+  }
+  const titleEl = wrapper.querySelector('.video-title-link strong');
+  const url = wrapper.querySelector('.video-title-link').href;
+  titleEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form card';
+  form.innerHTML = `
+    <input class="edit-title" value="${escAttr(data.title)}" />
+    <input class="edit-url" value="${escAttr(url)}" />
+    <div class="edit-controls">
+      <button class="btn save">Save</button>
+      <button class="small-btn cancel">Cancel</button>
+    </div>
+  `;
+  wrapper.appendChild(form);
+  form.querySelector('.cancel').onclick = () => {
+    form.remove();
+    titleEl.style.display = 'block';
+  };
+  form.querySelector('.save').onclick = async () => {
+    const nt = form.querySelector('.edit-title').value.trim();
+    const nu = form.querySelector('.edit-url').value.trim();
+    if (!nt || !nu) {
+      alert('Title & URL required');
+      return;
+    }
+    await update(ref(db, 'videos/' + key), { title: nt, url: nu });
+    await renderVideos();
+  };
+}
+
 document.getElementById('uploadPost').addEventListener('click', async () => {
   const title = document.getElementById('postTitle').value.trim();
-  const content = document.getElementById('postText').value.trim();
-  if (!title || !content) {
-    alert('Title & text required');
+  const text = document.getElementById('postText').value.trim();
+  if (!title || !text) {
+    alert('Title & body required');
     return;
   }
   const role = await getRoleForCurrentUser();
   if (role === 'admin' || role === 'owner') {
-    await push(ref(db, 'posts'), { title, content, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New post added: ${title}`);
+    await push(ref(db, 'posts'), { title, text, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New post: ${title}`);
     document.getElementById('postTitle').value = '';
     document.getElementById('postText').value = '';
     await renderPosts();
@@ -1076,18 +1096,17 @@ async function renderPosts() {
     return;
   }
   const role = await getRoleForCurrentUser();
-
   snap.forEach(child => {
-    const p = child.val();
+    const v = child.val();
     const k = child.key;
     const wrapper = document.createElement('div');
     wrapper.className = 'post fade-in';
     wrapper.innerHTML = `
       <div class="flex-between">
-        <div><strong>${esc(p.title)}</strong><div class="small-muted">Posted: ${new Date(p.createdAt).toLocaleString()}</div></div>
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Posted: ${new Date(v.createdAt).toLocaleString()}</div></div>
         <div><span class="small-muted">👍</span> <span class="count" id="plikes-${k}">0</span></div>
       </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(p.content)}</p></div>
+      <div style="margin-top:8px">${esc(v.text)}</div>
       <div class="controls">
         <button class="small-btn like-btn" id="plikes-btn-${k}" data-collection="posts" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="post" data-id="${k}">Comments</button>
@@ -1107,7 +1126,7 @@ async function renderPosts() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditPost(k, p);
+      edit.onclick = () => inlineEditPosts(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1128,19 +1147,21 @@ async function renderPosts() {
   });
 }
 
-function inlineEditPost(key, data) {
+function inlineEditPosts(key, data) {
   const wrapper = document.querySelector(`#postList .post .like-btn[data-id="${key}"]`)?.closest('.post');
   if (!wrapper) {
     renderPosts();
     return;
   }
-  const body = wrapper.querySelector('div:nth-child(2)');
-  if (body) body.style.display = 'none';
+  const titleEl = wrapper.querySelector('strong');
+  const bodyEl = wrapper.querySelector('div:nth-child(2)');
+  titleEl.style.display = 'none';
+  bodyEl.style.display = 'none';
   const form = document.createElement('div');
   form.className = 'edit-form card';
   form.innerHTML = `
     <input class="edit-title" value="${escAttr(data.title)}" />
-    <textarea class="edit-content">${esc(data.content)}</textarea>
+    <textarea class="edit-content">${esc(data.text)}</textarea>
     <div class="edit-controls">
       <button class="btn save">Save</button>
       <button class="small-btn cancel">Cancel</button>
@@ -1149,16 +1170,17 @@ function inlineEditPost(key, data) {
   wrapper.appendChild(form);
   form.querySelector('.cancel').onclick = () => {
     form.remove();
-    if (body) body.style.display = 'block';
+    titleEl.style.display = 'block';
+    bodyEl.style.display = 'block';
   };
   form.querySelector('.save').onclick = async () => {
     const nt = form.querySelector('.edit-title').value.trim();
     const nc = form.querySelector('.edit-content').value.trim();
     if (!nt || !nc) {
-      alert('Title & text required');
+      alert('Title & body required');
       return;
     }
-    await update(ref(db, 'posts/' + key), { title: nt, content: nc });
+    await update(ref(db, 'posts/' + key), { title: nt, text: nc });
     await renderPosts();
   };
 }
@@ -1180,7 +1202,7 @@ document.getElementById('uploadPositive').addEventListener('click', async () => 
       image = await getDownloadURL(sRef);
     }
     await push(ref(db, 'positives'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New positive added: ${title}`);
+    await notifyAllUsers(`New positive thinking: ${title}`);
     document.getElementById('positiveTitle').value = '';
     document.getElementById('positiveText').value = '';
     document.getElementById('positiveImageFile').value = '';
@@ -1204,17 +1226,17 @@ async function renderPositives() {
   }
   const role = await getRoleForCurrentUser();
   snap.forEach(child => {
-    const p = child.val();
+    const v = child.val();
     const k = child.key;
     const wrapper = document.createElement('div');
     wrapper.className = 'positive fade-in';
     wrapper.innerHTML = `
       <div class="flex-between">
-        <div><strong>${esc(p.title)}</strong><div class="small-muted">Added: ${new Date(p.createdAt).toLocaleString()}</div></div>
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
         <div><span class="small-muted">👍</span> <span class="count" id="positlikes-${k}">0</span></div>
       </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(p.text)}</p></div>
-      ${p.image ? `<img src="${escAttr(p.image)}" alt="${esc(p.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
       <div class="controls">
         <button class="small-btn like-btn" id="positlikes-btn-${k}" data-collection="positives" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="positive" data-id="${k}">Comments</button>
@@ -1234,7 +1256,7 @@ async function renderPositives() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditPositive(k, p);
+      edit.onclick = () => inlineEditPositives(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1255,7 +1277,7 @@ async function renderPositives() {
   });
 }
 
-function inlineEditPositive(key, data) {
+function inlineEditPositives(key, data) {
   const wrapper = document.querySelector(`#positiveList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
   if (!wrapper) {
     renderPositives();
@@ -1302,83 +1324,69 @@ function inlineEditPositive(key, data) {
 }
 
 async function renderGrowth() {
+  const ctx = document.getElementById('growthChart')?.getContext('2d');
+  if (!ctx) return;
   const snap = await get(ref(db, 'users'));
-  const users = [];
+  let dates = [];
+  let counts = [];
   snap.forEach(c => {
-    const u = c.val();
-    if (u.createdAt) users.push({ createdAt: u.createdAt });
+    const ts = new Date(c.val().createdAt).toLocaleDateString();
+    const i = dates.indexOf(ts);
+    if (i === -1) {
+      dates.push(ts);
+      counts.push(1);
+    } else {
+      counts[i]++;
+    }
   });
-  users.sort((a, b) => a.createdAt - b.createdAt);
-
-  const monthlyCounts = {};
-  users.forEach(u => {
-    const date = new Date(u.createdAt);
-    const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+  dates.sort((a, b) => new Date(a) - new Date(b));
+  let cumulative = 0;
+  const cumCounts = counts.map((c, i) => {
+    cumulative += counts[i];
+    return cumulative;
   });
-
-  const labels = Object.keys(monthlyCounts).sort();
-  const data = labels.map(m => monthlyCounts[m]);
-
-  const ctx = document.getElementById('growthChart').getContext('2d');
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels,
+      labels: dates,
       datasets: [{
-        label: 'New Users per Month',
-        data,
-        fill: true,
-        backgroundColor: 'rgba(0, 122, 255, 0.2)',
-        borderColor: 'rgba(0, 122, 255, 1)',
-        tension: 0.4
+        label: 'Users',
+        data: cumCounts,
+        borderColor: 'var(--blue)',
+        tension: 0.1
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       scales: {
-        y: {
-          beginAtZero: true,
-          title: { display: true, text: 'New Users' },
-          grid: { display: true }
-        },
-        x: {
-          title: { display: true, text: 'Month' },
-          grid: { display: false }
-        }
-      },
-      plugins: {
-        legend: { position: 'top' },
-        tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff' }
+        y: { beginAtZero: true }
       }
     }
   });
 }
 
-async function toggleLike(collection, id, buttonEl) {
+async function toggleLike(collection, id, btnEl) {
   const u = auth.currentUser;
   if (!u) {
-    alert('Please login to like');
+    alert('Login to like');
     return;
   }
   const likeRef = ref(db, `likes/${collection}/${id}/${u.uid}`);
   const snap = await get(likeRef);
   if (snap.exists()) {
     await remove(likeRef);
-    buttonEl.classList.remove('liked');
+    btnEl.classList.remove('liked');
   } else {
-    await set(likeRef, true);
-    buttonEl.classList.add('liked');
-    buttonEl.style.animation = 'none';
-    void buttonEl.offsetWidth;
-    buttonEl.style.animation = null;
+    await set(likeRef, { likedAt: Date.now() });
+    btnEl.classList.add('liked');
   }
 }
 
-function watchLikes(collection, id, countElId, btnElId) {
-  const counterEl = document.getElementById(countElId);
-  const btnEl = document.getElementById(btnElId);
+function watchLikes(collection, id, counterId, btnId) {
   const u = auth.currentUser;
+  const counterEl = document.getElementById(counterId);
+  const btnEl = document.getElementById(btnId);
   const likesRef = ref(db, `likes/${collection}/${id}`);
   onValue(likesRef, (snap) => {
     const likes = snap.exists() ? snap.val() : {};
@@ -2543,4 +2551,3 @@ document.getElementById('app').style.display = 'none';
 </script>
 </body>
 </html>
-</DOCUMENT>
