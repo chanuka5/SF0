@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SF0 — Role Based Site</title>
+<title>SF0 — Start From Zero</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -181,6 +181,55 @@
   th { background: var(--nav-active); }
   .notification-item { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
   .notification-item:last-child { border-bottom: none; }
+  .category-card {
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: white;
+  }
+  .category-card:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px var(--blue);
+  }
+  .category-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 80%);
+    animation: rotate 10s linear infinite;
+  }
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
+  }
+  .category-card[data-cat="sports"] {
+    background: linear-gradient(135deg, #00b140, #007d00);
+  }
+  .category-card[data-cat="technology"] {
+    background: linear-gradient(135deg, #2196f3, #0d47a1);
+  }
+  .category-card[data-cat="business"] {
+    background: linear-gradient(135deg, #f44336, #b71c1c);
+  }
+  .category-card[data-cat="others"] {
+    background: linear-gradient(135deg, #9c27b0, #6a1b9a);
+  }
+  .category-card h4 {
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+    transition: letter-spacing 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .category-card:hover h4 {
+    letter-spacing: 2px;
+  }
+  .category-card .icon {
+    display: inline-block;
+    animation: bounce 1s infinite;
+  }
 </style>
 </head>
 <body>
@@ -261,7 +310,7 @@
       <div class="brand">
         <div>
           <h3 style="margin:0">SF0</h3>
-          <div class="small-muted">Role Based Site</div>
+          <div class="small-muted">Start From Zero</div>
         </div>
       </div>
 
@@ -302,6 +351,26 @@
         </div>
         <p class="welcome-message">Welcome to SF0</p>
         <p class="muted">Use the sidebar to navigate and explore our features.</p>
+        <div style="margin-top: 32px;">
+          <div class="flex-between">
+            <h3 style="margin:0">World News</h3>
+            <div class="small-muted">Explore categories</div>
+          </div>
+          <div class="row" style="margin-top:16px; justify-content:space-around;">
+            <div class="category-card pulse ai-glow" data-cat="sports" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
+              <h4 style="margin:0"><span class="icon">⚽</span> Sports</h4>
+            </div>
+            <div class="category-card pulse ai-glow" data-cat="technology" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
+              <h4 style="margin:0"><span class="icon">💻</span> Technology</h4>
+            </div>
+            <div class="category-card pulse ai-glow" data-cat="business" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
+              <h4 style="margin:0"><span class="icon">💼</span> Business</h4>
+            </div>
+            <div class="category-card pulse ai-glow" data-cat="others" style="width:200px; height:100px; display:flex; align-items:center; justify-content:center; border-radius:10px; cursor:pointer;">
+              <h4 style="margin:0"><span class="icon">🌐</span> Others</h4>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="videos" class="card" style="display:none">
@@ -456,6 +525,91 @@
         </div>
         <div class="muted" style="margin-top:16px">For complaints, please use the Complaints section in the sidebar.</div>
       </section>
+
+      <section id="sports" class="card" style="display:none">
+        <div class="flex-between">
+          <h3 style="margin:0" class="ai-glow">Sports News</h3>
+          <button class="small-btn back-wn">Back</button>
+        </div>
+        <div class="muted">Latest updates in sports.</div>
+
+        <div id="sportsAdmin" class="admin-panel card" style="display:none">
+          <h4 style="margin:0 0 8px 0">Create Sports News (admin)</h4>
+          <input id="sportsTitle" placeholder="Title" />
+          <textarea id="sportsText" placeholder="Text" style="margin-top:8px"></textarea>
+          <input id="sportsImageFile" type="file" accept="image/*" style="margin-top:8px"/>
+          <div class="row" style="margin-top:8px">
+            <button id="uploadSports" class="btn">Publish</button>
+            <button id="clearSports" class="small-btn">Clear</button>
+          </div>
+        </div>
+
+        <div id="sportsList" style="margin-top:12px"></div>
+      </section>
+
+      <section id="technology" class="card" style="display:none">
+        <div class="flex-between">
+          <h3 style="margin:0" class="ai-glow">Technology News</h3>
+          <button class="small-btn back-wn">Back</button>
+        </div>
+        <div class="muted">Latest updates in technology.</div>
+
+        <div id="technologyAdmin" class="admin-panel card" style="display:none">
+          <h4 style="margin:0 0 8px 0">Create Technology News (admin)</h4>
+          <input id="technologyTitle" placeholder="Title" />
+          <textarea id="technologyText" placeholder="Text" style="margin-top:8px"></textarea>
+          <input id="technologyImageFile" type="file" accept="image/*" style="margin-top:8px"/>
+          <div class="row" style="margin-top:8px">
+            <button id="uploadTechnology" class="btn">Publish</button>
+            <button id="clearTechnology" class="small-btn">Clear</button>
+          </div>
+        </div>
+
+        <div id="technologyList" style="margin-top:12px"></div>
+      </section>
+
+      <section id="business" class="card" style="display:none">
+        <div class="flex-between">
+          <h3 style="margin:0" class="ai-glow">Business News</h3>
+          <button class="small-btn back-wn">Back</button>
+        </div>
+        <div class="muted">Latest updates in business.</div>
+
+        <div id="businessAdmin" class="admin-panel card" style="display:none">
+          <h4 style="margin:0 0 8px 0">Create Business News (admin)</h4>
+          <input id="businessTitle" placeholder="Title" />
+          <textarea id="businessText" placeholder="Text" style="margin-top:8px"></textarea>
+          <input id="businessImageFile" type="file" accept="image/*" style="margin-top:8px"/>
+          <div class="row" style="margin-top:8px">
+            <button id="uploadBusiness" class="btn">Publish</button>
+            <button id="clearBusiness" class="small-btn">Clear</button>
+          </div>
+        </div>
+
+        <div id="businessList" style="margin-top:12px"></div>
+      </section>
+
+      <section id="others" class="card" style="display:none">
+        <div class="flex-between">
+          <h3 style="margin:0" class="ai-glow">Other News</h3>
+          <button class="small-btn back-wn">Back</button>
+        </div>
+        <div class="muted">Latest updates in other categories.</div>
+
+        <div id="othersAdmin" class="admin-panel card" style="display:none">
+          <h4 style="margin:0 0 8px 0">Create Other News (admin)</h4>
+          <input id="othersTitle" placeholder="Title" />
+          <textarea id="othersText" placeholder="Text" style="margin-top:8px"></textarea>
+          <input id="othersImageFile" type="file" accept="image/*" style="margin-top:8px"/>
+          <div class="row" style="margin-top:8px">
+            <button id="uploadOthers" class="btn">Publish</button>
+            <button id="clearOthers" class="small-btn">Clear</button>
+          </div>
+        </div>
+
+        <div id="othersList" style="margin-top:12px"></div>
+      </section>
+
     </main>
   </div>
 
@@ -608,6 +762,10 @@ function showSection(id) {
   }
   setActiveNav(id);
   if (window.innerWidth <= 900) closeSidebar();
+  if (id === 'sports') renderSports();
+  if (id === 'technology') renderTechnology();
+  if (id === 'business') renderBusiness();
+  if (id === 'others') renderOthers();
 }
 navItems.forEach(it => {
   if (it.dataset.target) {
@@ -636,6 +794,17 @@ menuToggle.addEventListener('click', () => {
 });
 window.addEventListener('resize', () => {
   if (window.innerWidth > 900) closeSidebar();
+});
+
+document.querySelectorAll('.category-card').forEach(card => {
+  card.addEventListener('click', () => {
+    showSection(card.dataset.cat);
+  });
+});
+document.querySelectorAll('.back-wn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    showSection('home');
+  });
 });
 
 async function getRoleForCurrentUser() {
@@ -706,6 +875,10 @@ async function refreshRoleUI() {
   document.getElementById('complaintAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('aboutAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('positiveAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('sportsAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('technologyAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('businessAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('othersAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
 
   // Hide nav items for Manage Admins and User Details for users
   const adminsNav = document.querySelector('.nav-item[data-target="admins"]');
@@ -1232,7 +1405,14 @@ function watchLikes(collection, id, countElId, btnElId) {
 }
 
 async function toggleComments(collectionPath, itemId, type) {
-  const prefix = type === 'video' ? 'vcomments-' : type === 'post' ? 'pcomments-' : 'positcomments-';
+  let prefix;
+  if (type === 'video') prefix = 'vcomments-';
+  else if (type === 'post') prefix = 'pcomments-';
+  else if (type === 'positive') prefix = 'positcomments-';
+  else if (type === 'sports') prefix = 'sportscomments-';
+  else if (type === 'technology') prefix = 'technologycomments-';
+  else if (type === 'business') prefix = 'businesscomments-';
+  else if (type === 'others') prefix = 'otherscomments-';
   const wrapperId = prefix + itemId;
   const box = document.getElementById(wrapperId);
   if (!box) return;
@@ -1686,7 +1866,7 @@ function renderUserTable() {
 
 async function renderDetails() {
   const role = await getRoleForCurrentUser();
-  if (role !== 'admin' && role !== 'owner') {
+  if (role !== 'admin' && role === 'owner') {
     return;
   }
   const usersRef = ref(db, 'users');
@@ -1773,6 +1953,562 @@ document.getElementById('notifToggle').addEventListener('click', async () => {
     document.getElementById('notifCount').style.display = 'none';
   }
 });
+
+document.getElementById('uploadSports').addEventListener('click', async () => {
+  const title = document.getElementById('sportsTitle').value.trim();
+  const text = document.getElementById('sportsText').value.trim();
+  const file = document.getElementById('sportsImageFile').files[0];
+  if (!title || !text) {
+    alert('Title & text required');
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  if (role === 'admin' || role === 'owner') {
+    let image = '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/sports/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      image = await getDownloadURL(sRef);
+    }
+    await push(ref(db, 'worldnews/sports'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New sports news added: ${title}`);
+    document.getElementById('sportsTitle').value = '';
+    document.getElementById('sportsText').value = '';
+    document.getElementById('sportsImageFile').value = '';
+    await renderSports();
+  } else alert('Only admins/owner can add news');
+});
+
+document.getElementById('clearSports').addEventListener('click', () => {
+  document.getElementById('sportsTitle').value = '';
+  document.getElementById('sportsText').value = '';
+  document.getElementById('sportsImageFile').value = '';
+});
+
+async function renderSports() {
+  const listEl = document.getElementById('sportsList');
+  listEl.innerHTML = '';
+  const path = 'worldnews/sports';
+  const snap = await get(ref(db, path));
+  if (!snap.exists()) {
+    listEl.innerHTML = '<div class="muted">No news yet</div>';
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  snap.forEach(child => {
+    const v = child.val();
+    const k = child.key;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'positive fade-in';
+    wrapper.innerHTML = `
+      <div class="flex-between">
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
+        <div><span class="small-muted">👍</span> <span class="count" id="sportslikes-${k}">0</span></div>
+      </div>
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
+      <div class="controls">
+        <button class="small-btn like-btn" id="sportslikes-btn-${k}" data-collection="worldnews/sports" data-id="${k}">Like</button>
+        <button class="small-btn commentToggle" data-type="sports" data-id="${k}">Comments</button>
+      </div>
+      <div class="comment-box" id="sportscomments-${k}" style="display:none">
+        <div class="comment-form">
+          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn postComment">Post comment</button>
+            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
+          </div>
+        </div>
+        <div class="comments-list"></div>
+      </div>
+    `;
+    if (role === 'admin' || role === 'owner') {
+      const edit = document.createElement('button');
+      edit.className = 'small-btn';
+      edit.textContent = 'Edit';
+      edit.onclick = () => inlineEditSports(k, v);
+      const del = document.createElement('button');
+      del.className = 'small-btn';
+      del.style.background = '#fee';
+      del.textContent = 'Delete';
+      del.onclick = async () => {
+        if (confirm('Delete news?')) {
+          await remove(ref(db, path + '/' + k));
+          renderSports();
+        }
+      };
+      wrapper.querySelector('.controls').appendChild(edit);
+      wrapper.querySelector('.controls').appendChild(del);
+    }
+    listEl.appendChild(wrapper);
+    wrapper.querySelector(`#sportslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
+    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'sports'));
+    watchLikes('worldnews/sports', k, `sportslikes-${k}`, `sportslikes-btn-${k}`);
+  });
+}
+
+function inlineEditSports(key, data) {
+  const wrapper = document.querySelector(`#sportsList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
+  if (!wrapper) {
+    renderSports();
+    return;
+  }
+  const body = wrapper.querySelector('div:nth-child(2)');
+  const imageEl = wrapper.querySelector('img');
+  if (body) body.style.display = 'none';
+  if (imageEl) imageEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form card';
+  form.innerHTML = `
+    <input class="edit-title" value="${escAttr(data.title)}" />
+    <textarea class="edit-content">${esc(data.text)}</textarea>
+    <input class="edit-image-file" type="file" accept="image/*" />
+    <div class="edit-controls">
+      <button class="btn save">Save</button>
+      <button class="small-btn cancel">Cancel</button>
+    </div>
+  `;
+  wrapper.appendChild(form);
+  form.querySelector('.cancel').onclick = () => {
+    form.remove();
+    if (body) body.style.display = 'block';
+    if (imageEl) imageEl.style.display = 'block';
+  };
+  form.querySelector('.save').onclick = async () => {
+    const nt = form.querySelector('.edit-title').value.trim();
+    const nc = form.querySelector('.edit-content').value.trim();
+    const file = form.querySelector('.edit-image-file').files[0];
+    if (!nt || !nc) {
+      alert('Title & text required');
+      return;
+    }
+    let ni = data.image || '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/sports/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      ni = await getDownloadURL(sRef);
+    }
+    await update(ref(db, 'worldnews/sports/' + key), { title: nt, text: nc, image: ni });
+    await renderSports();
+  };
+}
+
+document.getElementById('uploadTechnology').addEventListener('click', async () => {
+  const title = document.getElementById('technologyTitle').value.trim();
+  const text = document.getElementById('technologyText').value.trim();
+  const file = document.getElementById('technologyImageFile').files[0];
+  if (!title || !text) {
+    alert('Title & text required');
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  if (role === 'admin' || role === 'owner') {
+    let image = '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/technology/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      image = await getDownloadURL(sRef);
+    }
+    await push(ref(db, 'worldnews/technology'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New technology news added: ${title}`);
+    document.getElementById('technologyTitle').value = '';
+    document.getElementById('technologyText').value = '';
+    document.getElementById('technologyImageFile').value = '';
+    await renderTechnology();
+  } else alert('Only admins/owner can add news');
+});
+
+document.getElementById('clearTechnology').addEventListener('click', () => {
+  document.getElementById('technologyTitle').value = '';
+  document.getElementById('technologyText').value = '';
+  document.getElementById('technologyImageFile').value = '';
+});
+
+async function renderTechnology() {
+  const listEl = document.getElementById('technologyList');
+  listEl.innerHTML = '';
+  const path = 'worldnews/technology';
+  const snap = await get(ref(db, path));
+  if (!snap.exists()) {
+    listEl.innerHTML = '<div class="muted">No news yet</div>';
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  snap.forEach(child => {
+    const v = child.val();
+    const k = child.key;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'positive fade-in';
+    wrapper.innerHTML = `
+      <div class="flex-between">
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
+        <div><span class="small-muted">👍</span> <span class="count" id="technologylikes-${k}">0</span></div>
+      </div>
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
+      <div class="controls">
+        <button class="small-btn like-btn" id="technologylikes-btn-${k}" data-collection="worldnews/technology" data-id="${k}">Like</button>
+        <button class="small-btn commentToggle" data-type="technology" data-id="${k}">Comments</button>
+      </div>
+      <div class="comment-box" id="technologycomments-${k}" style="display:none">
+        <div class="comment-form">
+          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn postComment">Post comment</button>
+            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
+          </div>
+        </div>
+        <div class="comments-list"></div>
+      </div>
+    `;
+    if (role === 'admin' || role === 'owner') {
+      const edit = document.createElement('button');
+      edit.className = 'small-btn';
+      edit.textContent = 'Edit';
+      edit.onclick = () => inlineEditTechnology(k, v);
+      const del = document.createElement('button');
+      del.className = 'small-btn';
+      del.style.background = '#fee';
+      del.textContent = 'Delete';
+      del.onclick = async () => {
+        if (confirm('Delete news?')) {
+          await remove(ref(db, path + '/' + k));
+          renderTechnology();
+        }
+      };
+      wrapper.querySelector('.controls').appendChild(edit);
+      wrapper.querySelector('.controls').appendChild(del);
+    }
+    listEl.appendChild(wrapper);
+    wrapper.querySelector(`#technologylikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
+    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'technology'));
+    watchLikes('worldnews/technology', k, `technologylikes-${k}`, `technologylikes-btn-${k}`);
+  });
+}
+
+function inlineEditTechnology(key, data) {
+  const wrapper = document.querySelector(`#technologyList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
+  if (!wrapper) {
+    renderTechnology();
+    return;
+  }
+  const body = wrapper.querySelector('div:nth-child(2)');
+  const imageEl = wrapper.querySelector('img');
+  if (body) body.style.display = 'none';
+  if (imageEl) imageEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form card';
+  form.innerHTML = `
+    <input class="edit-title" value="${escAttr(data.title)}" />
+    <textarea class="edit-content">${esc(data.text)}</textarea>
+    <input class="edit-image-file" type="file" accept="image/*" />
+    <div class="edit-controls">
+      <button class="btn save">Save</button>
+      <button class="small-btn cancel">Cancel</button>
+    </div>
+  `;
+  wrapper.appendChild(form);
+  form.querySelector('.cancel').onclick = () => {
+    form.remove();
+    if (body) body.style.display = 'block';
+    if (imageEl) imageEl.style.display = 'block';
+  };
+  form.querySelector('.save').onclick = async () => {
+    const nt = form.querySelector('.edit-title').value.trim();
+    const nc = form.querySelector('.edit-content').value.trim();
+    const file = form.querySelector('.edit-image-file').files[0];
+    if (!nt || !nc) {
+      alert('Title & text required');
+      return;
+    }
+    let ni = data.image || '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/technology/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      ni = await getDownloadURL(sRef);
+    }
+    await update(ref(db, 'worldnews/technology/' + key), { title: nt, text: nc, image: ni });
+    await renderTechnology();
+  };
+}
+
+document.getElementById('uploadBusiness').addEventListener('click', async () => {
+  const title = document.getElementById('businessTitle').value.trim();
+  const text = document.getElementById('businessText').value.trim();
+  const file = document.getElementById('businessImageFile').files[0];
+  if (!title || !text) {
+    alert('Title & text required');
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  if (role === 'admin' || role === 'owner') {
+    let image = '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/business/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      image = await getDownloadURL(sRef);
+    }
+    await push(ref(db, 'worldnews/business'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New business news added: ${title}`);
+    document.getElementById('businessTitle').value = '';
+    document.getElementById('businessText').value = '';
+    document.getElementById('businessImageFile').value = '';
+    await renderBusiness();
+  } else alert('Only admins/owner can add news');
+});
+
+document.getElementById('clearBusiness').addEventListener('click', () => {
+  document.getElementById('businessTitle').value = '';
+  document.getElementById('businessText').value = '';
+  document.getElementById('businessImageFile').value = '';
+});
+
+async function renderBusiness() {
+  const listEl = document.getElementById('businessList');
+  listEl.innerHTML = '';
+  const path = 'worldnews/business';
+  const snap = await get(ref(db, path));
+  if (!snap.exists()) {
+    listEl.innerHTML = '<div class="muted">No news yet</div>';
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  snap.forEach(child => {
+    const v = child.val();
+    const k = child.key;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'positive fade-in';
+    wrapper.innerHTML = `
+      <div class="flex-between">
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
+        <div><span class="small-muted">👍</span> <span class="count" id="businesslikes-${k}">0</span></div>
+      </div>
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
+      <div class="controls">
+        <button class="small-btn like-btn" id="businesslikes-btn-${k}" data-collection="worldnews/business" data-id="${k}">Like</button>
+        <button class="small-btn commentToggle" data-type="business" data-id="${k}">Comments</button>
+      </div>
+      <div class="comment-box" id="businesscomments-${k}" style="display:none">
+        <div class="comment-form">
+          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn postComment">Post comment</button>
+            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
+          </div>
+        </div>
+        <div class="comments-list"></div>
+      </div>
+    `;
+    if (role === 'admin' || role === 'owner') {
+      const edit = document.createElement('button');
+      edit.className = 'small-btn';
+      edit.textContent = 'Edit';
+      edit.onclick = () => inlineEditBusiness(k, v);
+      const del = document.createElement('button');
+      del.className = 'small-btn';
+      del.style.background = '#fee';
+      del.textContent = 'Delete';
+      del.onclick = async () => {
+        if (confirm('Delete news?')) {
+          await remove(ref(db, path + '/' + k));
+          renderBusiness();
+        }
+      };
+      wrapper.querySelector('.controls').appendChild(edit);
+      wrapper.querySelector('.controls').appendChild(del);
+    }
+    listEl.appendChild(wrapper);
+    wrapper.querySelector(`#businesslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
+    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'business'));
+    watchLikes('worldnews/business', k, `businesslikes-${k}`, `businesslikes-btn-${k}`);
+  });
+}
+
+function inlineEditBusiness(key, data) {
+  const wrapper = document.querySelector(`#businessList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
+  if (!wrapper) {
+    renderBusiness();
+    return;
+  }
+  const body = wrapper.querySelector('div:nth-child(2)');
+  const imageEl = wrapper.querySelector('img');
+  if (body) body.style.display = 'none';
+  if (imageEl) imageEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form card';
+  form.innerHTML = `
+    <input class="edit-title" value="${escAttr(data.title)}" />
+    <textarea class="edit-content">${esc(data.text)}</textarea>
+    <input class="edit-image-file" type="file" accept="image/*" />
+    <div class="edit-controls">
+      <button class="btn save">Save</button>
+      <button class="small-btn cancel">Cancel</button>
+    </div>
+  `;
+  wrapper.appendChild(form);
+  form.querySelector('.cancel').onclick = () => {
+    form.remove();
+    if (body) body.style.display = 'block';
+    if (imageEl) imageEl.style.display = 'block';
+  };
+  form.querySelector('.save').onclick = async () => {
+    const nt = form.querySelector('.edit-title').value.trim();
+    const nc = form.querySelector('.edit-content').value.trim();
+    const file = form.querySelector('.edit-image-file').files[0];
+    if (!nt || !nc) {
+      alert('Title & text required');
+      return;
+    }
+    let ni = data.image || '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/business/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      ni = await getDownloadURL(sRef);
+    }
+    await update(ref(db, 'worldnews/business/' + key), { title: nt, text: nc, image: ni });
+    await renderBusiness();
+  };
+}
+
+document.getElementById('uploadOthers').addEventListener('click', async () => {
+  const title = document.getElementById('othersTitle').value.trim();
+  const text = document.getElementById('othersText').value.trim();
+  const file = document.getElementById('othersImageFile').files[0];
+  if (!title || !text) {
+    alert('Title & text required');
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  if (role === 'admin' || role === 'owner') {
+    let image = '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/others/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      image = await getDownloadURL(sRef);
+    }
+    await push(ref(db, 'worldnews/others'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New others news added: ${title}`);
+    document.getElementById('othersTitle').value = '';
+    document.getElementById('othersText').value = '';
+    document.getElementById('othersImageFile').value = '';
+    await renderOthers();
+  } else alert('Only admins/owner can add news');
+});
+
+document.getElementById('clearOthers').addEventListener('click', () => {
+  document.getElementById('othersTitle').value = '';
+  document.getElementById('othersText').value = '';
+  document.getElementById('othersImageFile').value = '';
+});
+
+async function renderOthers() {
+  const listEl = document.getElementById('othersList');
+  listEl.innerHTML = '';
+  const path = 'worldnews/others';
+  const snap = await get(ref(db, path));
+  if (!snap.exists()) {
+    listEl.innerHTML = '<div class="muted">No news yet</div>';
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  snap.forEach(child => {
+    const v = child.val();
+    const k = child.key;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'positive fade-in';
+    wrapper.innerHTML = `
+      <div class="flex-between">
+        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
+        <div><span class="small-muted">👍</span> <span class="count" id="otherslikes-${k}">0</span></div>
+      </div>
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
+      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
+      <div class="controls">
+        <button class="small-btn like-btn" id="otherslikes-btn-${k}" data-collection="worldnews/others" data-id="${k}">Like</button>
+        <button class="small-btn commentToggle" data-type="others" data-id="${k}">Comments</button>
+      </div>
+      <div class="comment-box" id="otherscomments-${k}" style="display:none">
+        <div class="comment-form">
+          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn postComment">Post comment</button>
+            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
+          </div>
+        </div>
+        <div class="comments-list"></div>
+      </div>
+    `;
+    if (role === 'admin' || role === 'owner') {
+      const edit = document.createElement('button');
+      edit.className = 'small-btn';
+      edit.textContent = 'Edit';
+      edit.onclick = () => inlineEditOthers(k, v);
+      const del = document.createElement('button');
+      del.className = 'small-btn';
+      del.style.background = '#fee';
+      del.textContent = 'Delete';
+      del.onclick = async () => {
+        if (confirm('Delete news?')) {
+          await remove(ref(db, path + '/' + k));
+          renderOthers();
+        }
+      };
+      wrapper.querySelector('.controls').appendChild(edit);
+      wrapper.querySelector('.controls').appendChild(del);
+    }
+    listEl.appendChild(wrapper);
+    wrapper.querySelector(`#otherslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
+    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'others'));
+    watchLikes('worldnews/others', k, `otherslikes-${k}`, `otherslikes-btn-${k}`);
+  });
+}
+
+function inlineEditOthers(key, data) {
+  const wrapper = document.querySelector(`#othersList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
+  if (!wrapper) {
+    renderOthers();
+    return;
+  }
+  const body = wrapper.querySelector('div:nth-child(2)');
+  const imageEl = wrapper.querySelector('img');
+  if (body) body.style.display = 'none';
+  if (imageEl) imageEl.style.display = 'none';
+  const form = document.createElement('div');
+  form.className = 'edit-form card';
+  form.innerHTML = `
+    <input class="edit-title" value="${escAttr(data.title)}" />
+    <textarea class="edit-content">${esc(data.text)}</textarea>
+    <input class="edit-image-file" type="file" accept="image/*" />
+    <div class="edit-controls">
+      <button class="btn save">Save</button>
+      <button class="small-btn cancel">Cancel</button>
+    </div>
+  `;
+  wrapper.appendChild(form);
+  form.querySelector('.cancel').onclick = () => {
+    form.remove();
+    if (body) body.style.display = 'block';
+    if (imageEl) imageEl.style.display = 'block';
+  };
+  form.querySelector('.save').onclick = async () => {
+    const nt = form.querySelector('.edit-title').value.trim();
+    const nc = form.querySelector('.edit-content').value.trim();
+    const file = form.querySelector('.edit-image-file').files[0];
+    if (!nt || !nc) {
+      alert('Title & text required');
+      return;
+    }
+    let ni = data.image || '';
+    if (file) {
+      const sRef = storageRef(storage, 'worldnews/others/' + Date.now() + '_' + file.name);
+      await uploadBytes(sRef, file);
+      ni = await getDownloadURL(sRef);
+    }
+    await update(ref(db, 'worldnews/others/' + key), { title: nt, text: nc, image: ni });
+    await renderOthers();
+  };
+}
 
 async function renderAll() {
   await renderVideos();
