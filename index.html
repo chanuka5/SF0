@@ -1,3 +1,4 @@
+<DOCUMENT filename="index.html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,7 +149,7 @@
     from { box-shadow: 0 0 10px var(--blue); }
     to { box-shadow: 0 0 20px var(--blue); }
   }
-  #growthChart { min-height: 300px; }
+  #growthChart { min-height: 300px; width: 100% !important; height: auto !important; }
   .welcome-graphic {
     text-align: center;
     margin: 20px 0;
@@ -208,6 +209,51 @@
   .category-card .icon {
     font-size: 1.2em;
     color: var(--blue);
+  }
+  @media (max-width:900px){
+    .layout{flex-direction:column}
+    .sidebar{position:fixed;left:0;top:72px;height:calc(100vh - 72px);transform:translateX(-100%);z-index:1200;width:280px;box-shadow:8px 0 30px rgba(2,6,23,0.12)}
+    .sidebar.open{transform:translateX(0)}
+    #menuToggle{display:inline-block}
+    .overlay{display:none}
+    .overlay.open{display:block;position:fixed;inset:0;background:rgba(3,10,20,0.55);z-index:1100}
+  }
+  @media (max-width: 600px) {
+     .container {
+       padding: 0 8px;
+     }
+     .card {
+       padding: 12px;
+     }
+     table {
+       font-size: 12px;
+     }
+     th, td {
+       padding: 4px;
+     }
+     input, textarea, select {
+       font-size: 14px;
+     }
+     .layout {
+       gap: 8px;
+     }
+     .sidebar {
+       width: 100%;
+     }
+     #worldnews .nav {
+       flex-direction: column !important;
+       gap: 12px;
+       align-items: center;
+     }
+     #worldnews .nav-item {
+       flex: none !important;
+       width: 80%;
+       justify-content: center;
+       padding: 12px;
+     }
+  }
+  button {
+    touch-action: manipulation;
   }
 </style>
 </head>
@@ -805,6 +851,7 @@ function showSection(id) {
   if (id === 'technology') renderTechnology();
   if (id === 'business') renderBusiness();
   if (id === 'others') renderOthers();
+  if (id === 'growth') renderGrowth();
 }
 navItems.forEach(it => {
   if (it.dataset.target) {
@@ -1036,13 +1083,12 @@ function inlineEditVideos(key, data) {
     return;
   }
   const titleEl = wrapper.querySelector('.video-title-link strong');
-  const url = wrapper.querySelector('.video-title-link').href;
-  titleEl.style.display = 'none';
+  if (titleEl) titleEl.style.display = 'none';
   const form = document.createElement('div');
   form.className = 'edit-form card';
   form.innerHTML = `
     <input class="edit-title" value="${escAttr(data.title)}" />
-    <input class="edit-url" value="${escAttr(url)}" />
+    <input class="edit-url" value="${escAttr(data.url)}" />
     <div class="edit-controls">
       <button class="btn save">Save</button>
       <button class="small-btn cancel">Cancel</button>
@@ -1051,7 +1097,7 @@ function inlineEditVideos(key, data) {
   wrapper.appendChild(form);
   form.querySelector('.cancel').onclick = () => {
     form.remove();
-    titleEl.style.display = 'block';
+    if (titleEl) titleEl.style.display = 'block';
   };
   form.querySelector('.save').onclick = async () => {
     const nt = form.querySelector('.edit-title').value.trim();
@@ -1069,13 +1115,13 @@ document.getElementById('uploadPost').addEventListener('click', async () => {
   const title = document.getElementById('postTitle').value.trim();
   const text = document.getElementById('postText').value.trim();
   if (!title || !text) {
-    alert('Title & body required');
+    alert('Title and body required');
     return;
   }
   const role = await getRoleForCurrentUser();
   if (role === 'admin' || role === 'owner') {
     await push(ref(db, 'posts'), { title, text, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New post: ${title}`);
+    await notifyAllUsers(`New post added: ${title}`);
     document.getElementById('postTitle').value = '';
     document.getElementById('postText').value = '';
     await renderPosts();
@@ -1097,16 +1143,21 @@ async function renderPosts() {
   }
   const role = await getRoleForCurrentUser();
   snap.forEach(child => {
-    const v = child.val();
+    const p = child.val();
     const k = child.key;
     const wrapper = document.createElement('div');
     wrapper.className = 'post fade-in';
     wrapper.innerHTML = `
       <div class="flex-between">
-        <div><strong>${esc(v.title)}</strong><div class="small-muted">Posted: ${new Date(v.createdAt).toLocaleString()}</div></div>
-        <div><span class="small-muted">👍</span> <span class="count" id="plikes-${k}">0</span></div>
+        <div>
+          <strong>${esc(p.title)}</strong>
+          <div class="small-muted">Posted: ${new Date(p.createdAt).toLocaleString()}</div>
+        </div>
+        <div>
+          <span class="small-muted">👍</span> <span class="count" id="plikes-${k}">0</span>
+        </div>
       </div>
-      <div style="margin-top:8px">${esc(v.text)}</div>
+      <div style="margin-top:8px"><p style="text-align: justify;">${esc(p.text)}</p></div>
       <div class="controls">
         <button class="small-btn like-btn" id="plikes-btn-${k}" data-collection="posts" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="post" data-id="${k}">Comments</button>
@@ -1126,7 +1177,7 @@ async function renderPosts() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditPosts(k, v);
+      edit.onclick = () => inlineEditPosts(k, p);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1154,9 +1205,9 @@ function inlineEditPosts(key, data) {
     return;
   }
   const titleEl = wrapper.querySelector('strong');
-  const bodyEl = wrapper.querySelector('div:nth-child(2)');
-  titleEl.style.display = 'none';
-  bodyEl.style.display = 'none';
+  const bodyEl = wrapper.querySelector('p');
+  if (titleEl) titleEl.style.display = 'none';
+  if (bodyEl) bodyEl.style.display = 'none';
   const form = document.createElement('div');
   form.className = 'edit-form card';
   form.innerHTML = `
@@ -1170,14 +1221,14 @@ function inlineEditPosts(key, data) {
   wrapper.appendChild(form);
   form.querySelector('.cancel').onclick = () => {
     form.remove();
-    titleEl.style.display = 'block';
-    bodyEl.style.display = 'block';
+    if (titleEl) titleEl.style.display = 'block';
+    if (bodyEl) bodyEl.style.display = 'block';
   };
   form.querySelector('.save').onclick = async () => {
     const nt = form.querySelector('.edit-title').value.trim();
     const nc = form.querySelector('.edit-content').value.trim();
     if (!nt || !nc) {
-      alert('Title & body required');
+      alert('Title & text required');
       return;
     }
     await update(ref(db, 'posts/' + key), { title: nt, text: nc });
@@ -1202,7 +1253,7 @@ document.getElementById('uploadPositive').addEventListener('click', async () => 
       image = await getDownloadURL(sRef);
     }
     await push(ref(db, 'positives'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New positive thinking: ${title}`);
+    await notifyAllUsers(`New positive thinking added: ${title}`);
     document.getElementById('positiveTitle').value = '';
     document.getElementById('positiveText').value = '';
     document.getElementById('positiveImageFile').value = '';
@@ -1324,152 +1375,66 @@ function inlineEditPositives(key, data) {
 }
 
 async function renderGrowth() {
-  const ctx = document.getElementById('growthChart')?.getContext('2d');
-  if (!ctx) return;
-  const snap = await get(ref(db, 'users'));
-  let dates = [];
-  let counts = [];
-  snap.forEach(c => {
-    const ts = new Date(c.val().createdAt).toLocaleDateString();
-    const i = dates.indexOf(ts);
-    if (i === -1) {
-      dates.push(ts);
-      counts.push(1);
-    } else {
-      counts[i]++;
+  const chartEl = document.getElementById('growthChart');
+  if (!chartEl) return;
+
+  // Fetch users from Firebase
+  const usersSnap = await get(ref(db, 'users'));
+  if (!usersSnap.exists()) {
+    chartEl.parentElement.insertAdjacentHTML('afterend', '<div class="muted">No user data available yet.</div>');
+    return;
+  }
+
+  // Group users by creation date (daily)
+  let dates = {};
+  usersSnap.forEach(child => {
+    const createdAt = child.val().createdAt;
+    if (createdAt) {
+      const date = new Date(createdAt).toISOString().split('T')[0]; // YYYY-MM-DD
+      dates[date] = (dates[date] || 0) + 1;
     }
   });
-  dates.sort((a, b) => new Date(a) - new Date(b));
-  let cumulative = 0;
-  const cumCounts = counts.map((c, i) => {
-    cumulative += counts[i];
-    return cumulative;
+
+  // Sort dates and compute cumulative growth
+  const sortedDates = Object.keys(dates).sort();
+  const cumulative = [];
+  let total = 0;
+  sortedDates.forEach(date => {
+    total += dates[date];
+    cumulative.push(total);
   });
+
+  // Render the chart
+  const ctx = chartEl.getContext('2d');
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: dates,
+      labels: sortedDates,
       datasets: [{
-        label: 'Users',
-        data: cumCounts,
+        label: 'Cumulative Users',
+        data: cumulative,
         borderColor: 'var(--blue)',
-        tension: 0.1
+        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+        fill: true,
+        tension: 0.3
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        y: { beginAtZero: true }
+        y: {
+          beginAtZero: true,
+          title: { display: true, text: 'Total Users' }
+        },
+        x: {
+          title: { display: true, text: 'Date' }
+        }
+      },
+      plugins: {
+        legend: { position: 'top' }
       }
     }
-  });
-}
-
-async function toggleLike(collection, id, btnEl) {
-  const u = auth.currentUser;
-  if (!u) {
-    alert('Login to like');
-    return;
-  }
-  const likeRef = ref(db, `likes/${collection}/${id}/${u.uid}`);
-  const snap = await get(likeRef);
-  if (snap.exists()) {
-    await remove(likeRef);
-    btnEl.classList.remove('liked');
-  } else {
-    await set(likeRef, { likedAt: Date.now() });
-    btnEl.classList.add('liked');
-  }
-}
-
-function watchLikes(collection, id, counterId, btnId) {
-  const u = auth.currentUser;
-  const counterEl = document.getElementById(counterId);
-  const btnEl = document.getElementById(btnId);
-  const likesRef = ref(db, `likes/${collection}/${id}`);
-  onValue(likesRef, (snap) => {
-    const likes = snap.exists() ? snap.val() : {};
-    const count = Object.keys(likes).length;
-    if (counterEl) counterEl.textContent = count;
-    if (btnEl && u) {
-      if (likes[u.uid]) btnEl.classList.add('liked');
-      else btnEl.classList.remove('liked');
-    }
-  }, { onlyOnce: false });
-}
-
-async function toggleComments(collectionPath, itemId, type) {
-  let prefix;
-  if (type === 'video') prefix = 'vcomments-';
-  else if (type === 'post') prefix = 'pcomments-';
-  else if (type === 'positive') prefix = 'positcomments-';
-  else if (type === 'sports') prefix = 'sportscomments-';
-  else if (type === 'technology') prefix = 'technologycomments-';
-  else if (type === 'business') prefix = 'businesscomments-';
-  else if (type === 'others') prefix = 'otherscomments-';
-  const wrapperId = prefix + itemId;
-  const box = document.getElementById(wrapperId);
-  if (!box) return;
-  if (box.style.display === 'block') {
-    box.style.display = 'none';
-    return;
-  }
-  box.style.display = 'block';
-  const commentsList = box.querySelector('.comments-list');
-  const postBtn = box.querySelector('.postComment');
-  postBtn.addEventListener('click', async () => {
-    const txt = box.querySelector('.new-comment').value.trim();
-    if (!txt) {
-      alert('Type a comment');
-      return;
-    }
-    const u = auth.currentUser;
-    if (!u) {
-      alert('Login to comment');
-      return;
-    }
-    const cobj = { uid: u.uid, text: txt, email: u.email, createdAt: Date.now() };
-    await push(ref(db, `comments/${collectionPath}/${itemId}`), cobj);
-    box.querySelector('.new-comment').value = '';
-    await renderComments(collectionPath, itemId, commentsList);
-  }, { once: true });
-  await renderComments(collectionPath, itemId, commentsList);
-}
-
-async function renderComments(collectionPath, itemId, container) {
-  container.innerHTML = '';
-  const snap = await get(ref(db, `comments/${collectionPath}/${itemId}`));
-  if (!snap.exists()) {
-    container.innerHTML = '<div class="small-muted">No comments yet</div>';
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  snap.forEach(c => {
-    const cm = c.val();
-    const k = c.key;
-    const div = document.createElement('div');
-    div.className = 'comment';
-    div.innerHTML = `
-      <div style="display:flex;justify-content:space-between">
-        <div><strong>${esc(cm.email)}</strong> <span class="small-muted">${new Date(cm.createdAt).toLocaleString()}</span></div>
-      </div>
-      <div style="margin-top:6px">${esc(cm.text)}</div>
-    `;
-    const u = auth.currentUser;
-    if (u && (u.uid === cm.uid || role === 'admin' || role === 'owner')) {
-      const del = document.createElement('button');
-      del.className = 'small-btn';
-      del.textContent = 'Delete';
-      del.onclick = async () => {
-        if (confirm('Delete this comment?')) {
-          await remove(ref(db, `comments/${collectionPath}/${itemId}/${k}`));
-          renderComments(collectionPath, itemId, container);
-        }
-      };
-      div.querySelector('div').appendChild(del);
-    }
-    container.appendChild(div);
   });
 }
 
@@ -2532,6 +2497,111 @@ async function renderWeather() {
   }
 }
 
+async function toggleLike(collection, id, btnEl) {
+  const u = auth.currentUser;
+  if (!u) {
+    alert('Login to like');
+    return;
+  }
+  const likeRef = ref(db, `likes/${collection}/${id}/${u.uid}`);
+  const snap = await get(likeRef);
+  if (snap.exists()) {
+    await remove(likeRef);
+  } else {
+    await set(likeRef, { likedAt: Date.now() });
+  }
+}
+
+function watchLikes(collection, id, counterId, btnId) {
+  const u = auth.currentUser;
+  const counterEl = document.getElementById(counterId);
+  const btnEl = document.getElementById(btnId);
+  const likesRef = ref(db, `likes/${collection}/${id}`);
+  onValue(likesRef, (snap) => {
+    const likes = snap.exists() ? snap.val() : {};
+    const count = Object.keys(likes).length;
+    if (counterEl) counterEl.textContent = count;
+    if (btnEl && u) {
+      if (likes[u.uid]) btnEl.classList.add('liked');
+      else btnEl.classList.remove('liked');
+    }
+  }, { onlyOnce: false });
+}
+
+async function toggleComments(collectionPath, itemId, type) {
+  let prefix;
+  if (type === 'video') prefix = 'vcomments-';
+  else if (type === 'post') prefix = 'pcomments-';
+  else if (type === 'positive') prefix = 'positcomments-';
+  else if (type === 'sports') prefix = 'sportscomments-';
+  else if (type === 'technology') prefix = 'technologycomments-';
+  else if (type === 'business') prefix = 'businesscomments-';
+  else if (type === 'others') prefix = 'otherscomments-';
+  const wrapperId = prefix + itemId;
+  const box = document.getElementById(wrapperId);
+  if (!box) return;
+  if (box.style.display === 'block') {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  const commentsList = box.querySelector('.comments-list');
+  const postBtn = box.querySelector('.postComment');
+  postBtn.addEventListener('click', async () => {
+    const txt = box.querySelector('.new-comment').value.trim();
+    if (!txt) {
+      alert('Type a comment');
+      return;
+    }
+    const u = auth.currentUser;
+    if (!u) {
+      alert('Login to comment');
+      return;
+    }
+    const cobj = { uid: u.uid, text: txt, email: u.email, createdAt: Date.now() };
+    await push(ref(db, `comments/${collectionPath}/${itemId}`), cobj);
+    box.querySelector('.new-comment').value = '';
+    await renderComments(collectionPath, itemId, commentsList);
+  }, { once: true });
+  await renderComments(collectionPath, itemId, commentsList);
+}
+
+async function renderComments(collectionPath, itemId, container) {
+  container.innerHTML = '';
+  const snap = await get(ref(db, `comments/${collectionPath}/${itemId}`));
+  if (!snap.exists()) {
+    container.innerHTML = '<div class="small-muted">No comments yet</div>';
+    return;
+  }
+  const role = await getRoleForCurrentUser();
+  snap.forEach(c => {
+    const cm = c.val();
+    const k = c.key;
+    const div = document.createElement('div');
+    div.className = 'comment';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between">
+        <div><strong>${esc(cm.email)}</strong> <span class="small-muted">${new Date(cm.createdAt).toLocaleString()}</span></div>
+      </div>
+      <div style="margin-top:6px">${esc(cm.text)}</div>
+    `;
+    const u = auth.currentUser;
+    if (u && (u.uid === cm.uid || role === 'admin' || role === 'owner')) {
+      const del = document.createElement('button');
+      del.className = 'small-btn';
+      del.textContent = 'Delete';
+      del.onclick = async () => {
+        if (confirm('Delete this comment?')) {
+          await remove(ref(db, `comments/${collectionPath}/${itemId}/${k}`));
+          renderComments(collectionPath, itemId, container);
+        }
+      };
+      div.querySelector('div').appendChild(del);
+    }
+    container.appendChild(div);
+  });
+}
+
 async function renderAll() {
   await renderVideos();
   await renderPosts();
@@ -2550,4 +2620,4 @@ document.addEventListener('visibilitychange', () => {});
 document.getElementById('app').style.display = 'none';
 </script>
 </body>
-</html>
+</html></DOCUMENT>
