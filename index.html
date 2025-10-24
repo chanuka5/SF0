@@ -1,4 +1,3 @@
-<DOCUMENT filename="index.html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -179,14 +178,15 @@
   table { width: 100%; border-collapse: collapse; margin-top: 16px; }
   th, td { border: 1px solid var(--muted); padding: 8px; text-align: left; }
   th { background: var(--nav-active); }
-  .notification-item { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .notification-item { padding: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); position: relative; }
   .notification-item:last-child { border-bottom: none; }
+  .notification-delete { position: absolute; right: 8px; top: 8px; font-size: 12px; color: var(--danger); cursor: pointer; }
   .category-card {
     position: relative;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    color: var(--text);
-    background: var(--card);
+    color: var(--blue);
+    background: var(--nav-active);
     padding: 8px 12px;
     border-radius: 8px;
     cursor: pointer;
@@ -345,7 +345,13 @@
     </div>
   </div>
   <div id="notifDropdown" style="display:none; position:absolute; right:16px; top:60px; width:300px; max-height:400px; overflow:auto; background:var(--card); border-radius:12px; padding:12px; box-shadow:0 8px 24px rgba(2,6,23,0.04); z-index:1000">
-    <h4 style="margin:0 0 8px 0">Notifications</h4>
+    <div class="flex-between">
+      <h4 style="margin:0">Notifications</h4>
+      <button id="closeNotif" class="small-btn" style="display: none;">Close</button>
+    </div>
+    <div class="row" style="margin: 8px 0;">
+      <button id="clearAllNotif" class="small-btn">Delete All</button>
+    </div>
     <div id="notifList"></div>
   </div>
 
@@ -363,7 +369,6 @@
         <div class="nav-item" data-target="videos"><div class="icon">🎥</div><div class="label">Videos</div></div>
         <div class="nav-item" data-target="posts"><div class="icon">📝</div><div class="label">Posts</div></div>
         <div class="nav-item" data-target="positives"><div class="icon">🌟</div><div class="label">Positive Thinking</div></div>
-        <div class="nav-item" data-target="growth"><div class="icon">📈</div><div class="label">Growth</div></div>
         <div class="nav-item" data-target="complaints"><div class="icon">✉️</div><div class="label">Complaints</div></div>
         <div class="nav-item" data-target="admins"><div class="icon">🛠️</div><div class="label">Manage Admins</div></div>
         <div class="nav-item" data-target="details"><div class="icon">📊</div><div class="label">User Details</div></div>
@@ -462,12 +467,6 @@
         <div id="positiveList" style="margin-top:12px"></div>
       </section>
 
-      <section id="growth" class="card" style="display:none">
-        <h3 style="margin:0 0 8px 0">Growth Analytics</h3>
-        <p class="muted">User growth over time is visible here.</p>
-        <canvas id="growthChart" style="max-height:400px"></canvas>
-      </section>
-
       <section id="complaints" class="card" style="display:none">
         <h3 style="margin:0 0 8px 0">Complaint Center</h3>
 
@@ -559,102 +558,25 @@
         <div class="muted" style="margin-top:16px">For complaints, please use the Complaints section in the sidebar.</div>
       </section>
 
-      <section id="sports" class="card" style="display:none">
-        <div class="flex-between">
-          <h3 style="margin:0" class="ai-glow">Sports News</h3>
-          <button class="small-btn back-wn">Back</button>
-        </div>
-        <div class="muted">Latest updates in sports.</div>
-
-        <div id="sportsAdmin" class="admin-panel card" style="display:none">
-          <h4 style="margin:0 0 8px 0">Create Sports News (admin)</h4>
-          <input id="sportsTitle" placeholder="Title" />
-          <textarea id="sportsText" placeholder="Text" style="margin-top:8px"></textarea>
-          <input id="sportsImageFile" type="file" accept="image/*" style="margin-top:8px"/>
-          <div class="row" style="margin-top:8px">
-            <button id="uploadSports" class="btn">Publish</button>
-            <button id="clearSports" class="small-btn">Clear</button>
-          </div>
-        </div>
-
-        <div id="sportsList" style="margin-top:12px"></div>
-      </section>
-
-      <section id="technology" class="card" style="display:none">
-        <div class="flex-between">
-          <h3 style="margin:0" class="ai-glow">Technology News</h3>
-          <button class="small-btn back-wn">Back</button>
-        </div>
-        <div class="muted">Latest updates in technology.</div>
-
-        <div id="technologyAdmin" class="admin-panel card" style="display:none">
-          <h4 style="margin:0 0 8px 0">Create Technology News (admin)</h4>
-          <input id="technologyTitle" placeholder="Title" />
-          <textarea id="technologyText" placeholder="Text" style="margin-top:8px"></textarea>
-          <input id="technologyImageFile" type="file" accept="image/*" style="margin-top:8px"/>
-          <div class="row" style="margin-top:8px">
-            <button id="uploadTechnology" class="btn">Publish</button>
-            <button id="clearTechnology" class="small-btn">Clear</button>
-          </div>
-        </div>
-
-        <div id="technologyList" style="margin-top:12px"></div>
-      </section>
-
-      <section id="business" class="card" style="display:none">
-        <div class="flex-between">
-          <h3 style="margin:0" class="ai-glow">Business News</h3>
-          <button class="small-btn back-wn">Back</button>
-        </div>
-        <div class="muted">Latest updates in business.</div>
-
-        <div id="businessAdmin" class="admin-panel card" style="display:none">
-          <h4 style="margin:0 0 8px 0">Create Business News (admin)</h4>
-          <input id="businessTitle" placeholder="Title" />
-          <textarea id="businessText" placeholder="Text" style="margin-top:8px"></textarea>
-          <input id="businessImageFile" type="file" accept="image/*" style="margin-top:8px"/>
-          <div class="row" style="margin-top:8px">
-            <button id="uploadBusiness" class="btn">Publish</button>
-            <button id="clearBusiness" class="small-btn">Clear</button>
-          </div>
-        </div>
-
-        <div id="businessList" style="margin-top:12px"></div>
-      </section>
-
-      <section id="others" class="card" style="display:none">
-        <div class="flex-between">
-          <h3 style="margin:0" class="ai-glow">Other News</h3>
-          <button class="small-btn back-wn">Back</button>
-        </div>
-        <div class="muted">Latest updates in other categories.</div>
-
-        <div id="othersAdmin" class="admin-panel card" style="display:none">
-          <h4 style="margin:0 0 8px 0">Create Other News (admin)</h4>
-          <input id="othersTitle" placeholder="Title" />
-          <textarea id="othersText" placeholder="Text" style="margin-top:8px"></textarea>
-          <input id="othersImageFile" type="file" accept="image/*" style="margin-top:8px"/>
-          <div class="row" style="margin-top:8px">
-            <button id="uploadOthers" class="btn">Publish</button>
-            <button id="clearOthers" class="small-btn">Clear</button>
-          </div>
-        </div>
-
-        <div id="othersList" style="margin-top:12px"></div>
-      </section>
-
       <section id="worldnews" class="card" style="display:none">
         <div class="flex-between">
           <h3 style="margin:0" class="ai-glow">World News</h3>
           <button class="small-btn back-wn">Back to Home</button>
         </div>
-        <div class="muted">Choose a category</div>
-        <div class="nav" style="flex-direction:row; justify-content:space-around; margin-top:16px;">
-          <div class="nav-item" data-target="sports" style="flex:1; text-align:center"><div class="icon">⚽</div><div class="label">Sports</div></div>
-          <div class="nav-item" data-target="technology" style="flex:1; text-align:center"><div class="icon">💻</div><div class="label">Technology</div></div>
-          <div class="nav-item" data-target="business" style="flex:1; text-align:center"><div class="icon">💼</div><div class="label">Business</div></div>
-          <div class="nav-item" data-target="others" style="flex:1; text-align:center"><div class="icon">🌐</div><div class="label">Others</div></div>
+        <div class="muted">Latest world news updates.</div>
+
+        <div id="worldnewsAdmin" class="admin-panel card" style="display:none">
+          <h4 style="margin:0 0 8px 0">Create World News (admin)</h4>
+          <input id="worldnewsTitle" placeholder="Title" />
+          <textarea id="worldnewsText" placeholder="Text" style="margin-top:8px"></textarea>
+          <input id="worldnewsImageFile" type="file" accept="image/*" style="margin-top:8px"/>
+          <div class="row" style="margin-top:8px">
+            <button id="uploadWorldnews" class="btn">Publish</button>
+            <button id="clearWorldnews" class="small-btn">Clear</button>
+          </div>
         </div>
+
+        <div id="worldnewsList" style="margin-top:12px"></div>
       </section>
 
     </main>
@@ -847,11 +769,8 @@ function showSection(id) {
   setActiveNav(id);
   if (window.innerWidth <= 900) closeSidebar();
   if (id === 'home') renderWeather();
-  if (id === 'sports') renderSports();
-  if (id === 'technology') renderTechnology();
-  if (id === 'business') renderBusiness();
-  if (id === 'others') renderOthers();
-  if (id === 'growth') renderGrowth();
+  if (id === 'worldnews') renderWorldNews();
+  if (id === 'details') renderDetails();
 }
 navItems.forEach(it => {
   if (it.dataset.target) {
@@ -961,10 +880,7 @@ async function refreshRoleUI() {
   document.getElementById('complaintAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('aboutAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
   document.getElementById('positiveAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
-  document.getElementById('sportsAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
-  document.getElementById('technologyAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
-  document.getElementById('businessAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
-  document.getElementById('othersAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
+  document.getElementById('worldnewsAdmin').style.display = (role === 'admin' || role === 'owner') ? 'block' : 'none';
 
   // Hide nav items for Manage Admins and User Details for users
   const adminsNav = document.querySelector('.nav-item[data-target="admins"]');
@@ -1018,26 +934,20 @@ async function renderVideos() {
     return;
   }
   const role = await getRoleForCurrentUser();
-
   snap.forEach(child => {
     const v = child.val();
     const k = child.key;
     const wrapper = document.createElement('div');
     wrapper.className = 'video fade-in';
+    const videoId = v.url.split('v=')[1] || v.url.split('be/')[1];
+    const embedUrl = `https://www.youtube.com/embed/${videoId}`;
     wrapper.innerHTML = `
-      <div class="flex-between">
-        <div>
-          <a href="${escAttr(v.url)}" target="_blank" class="video-title-link">
-            <strong>${esc(v.title)}</strong>
-          </a>
-          <div class="small-muted">Uploaded: ${new Date(v.createdAt).toLocaleString()}</div>
-        </div>
-        <div>
-          <span class="small-muted">👍</span> <span class="count" id="vlikes-${k}">0</span>
-        </div>
-      </div>
+      <a class="video-title-link" href="${escAttr(v.url)}" target="_blank">${esc(v.title)}</a>
+      <iframe width="100%" height="315" src="${escAttr(embedUrl)}" frameborder="0" allowfullscreen style="border-radius:8px"></iframe>
+      <div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div>
       <div class="controls">
         <button class="small-btn like-btn" id="vlikes-btn-${k}" data-collection="videos" data-id="${k}">Like</button>
+        <span class="count" id="vlikes-${k}">0</span>
         <button class="small-btn commentToggle" data-type="video" data-id="${k}">Comments</button>
       </div>
       <div class="comment-box" id="vcomments-${k}" style="display:none">
@@ -1055,7 +965,7 @@ async function renderVideos() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditVideos(k, v);
+      edit.onclick = () => inlineEditVideo(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1076,14 +986,14 @@ async function renderVideos() {
   });
 }
 
-function inlineEditVideos(key, data) {
+function inlineEditVideo(key, data) {
   const wrapper = document.querySelector(`#videoList .video .like-btn[data-id="${key}"]`)?.closest('.video');
   if (!wrapper) {
     renderVideos();
     return;
   }
-  const titleEl = wrapper.querySelector('.video-title-link strong');
-  if (titleEl) titleEl.style.display = 'none';
+  const titleLink = wrapper.querySelector('.video-title-link');
+  if (titleLink) titleLink.style.display = 'none';
   const form = document.createElement('div');
   form.className = 'edit-form card';
   form.innerHTML = `
@@ -1094,16 +1004,20 @@ function inlineEditVideos(key, data) {
       <button class="small-btn cancel">Cancel</button>
     </div>
   `;
-  wrapper.appendChild(form);
+  wrapper.insertBefore(form, wrapper.firstChild);
   form.querySelector('.cancel').onclick = () => {
     form.remove();
-    if (titleEl) titleEl.style.display = 'block';
+    if (titleLink) titleLink.style.display = 'block';
   };
   form.querySelector('.save').onclick = async () => {
     const nt = form.querySelector('.edit-title').value.trim();
     const nu = form.querySelector('.edit-url').value.trim();
     if (!nt || !nu) {
       alert('Title & URL required');
+      return;
+    }
+    if (!nu.includes('youtube.com/') && !nu.includes('youtu.be/')) {
+      alert('Valid YouTube URL required');
       return;
     }
     await update(ref(db, 'videos/' + key), { title: nt, url: nu });
@@ -1115,7 +1029,7 @@ document.getElementById('uploadPost').addEventListener('click', async () => {
   const title = document.getElementById('postTitle').value.trim();
   const text = document.getElementById('postText').value.trim();
   if (!title || !text) {
-    alert('Title and body required');
+    alert('Title & text required');
     return;
   }
   const role = await getRoleForCurrentUser();
@@ -1125,7 +1039,7 @@ document.getElementById('uploadPost').addEventListener('click', async () => {
     document.getElementById('postTitle').value = '';
     document.getElementById('postText').value = '';
     await renderPosts();
-  } else alert('Only admins/owner can create posts');
+  } else alert('Only admins/owner can add posts');
 });
 
 document.getElementById('clearPost').addEventListener('click', () => {
@@ -1143,21 +1057,17 @@ async function renderPosts() {
   }
   const role = await getRoleForCurrentUser();
   snap.forEach(child => {
-    const p = child.val();
+    const v = child.val();
     const k = child.key;
     const wrapper = document.createElement('div');
     wrapper.className = 'post fade-in';
     wrapper.innerHTML = `
       <div class="flex-between">
-        <div>
-          <strong>${esc(p.title)}</strong>
-          <div class="small-muted">Posted: ${new Date(p.createdAt).toLocaleString()}</div>
-        </div>
-        <div>
-          <span class="small-muted">👍</span> <span class="count" id="plikes-${k}">0</span>
-        </div>
+        <strong>${esc(v.title)}</strong>
+        <div><span class="small-muted">👍</span> <span class="count" id="plikes-${k}">0</span></div>
       </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(p.text)}</p></div>
+      <div style="margin-top:8px">${esc(v.text)}</div>
+      <div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div>
       <div class="controls">
         <button class="small-btn like-btn" id="plikes-btn-${k}" data-collection="posts" data-id="${k}">Like</button>
         <button class="small-btn commentToggle" data-type="post" data-id="${k}">Comments</button>
@@ -1177,7 +1087,7 @@ async function renderPosts() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditPosts(k, p);
+      edit.onclick = () => inlineEditPost(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1198,14 +1108,14 @@ async function renderPosts() {
   });
 }
 
-function inlineEditPosts(key, data) {
+function inlineEditPost(key, data) {
   const wrapper = document.querySelector(`#postList .post .like-btn[data-id="${key}"]`)?.closest('.post');
   if (!wrapper) {
     renderPosts();
     return;
   }
-  const titleEl = wrapper.querySelector('strong');
-  const bodyEl = wrapper.querySelector('p');
+  const titleEl = wrapper.querySelector('.flex-between strong');
+  const bodyEl = wrapper.querySelector('div:nth-child(2)');
   if (titleEl) titleEl.style.display = 'none';
   if (bodyEl) bodyEl.style.display = 'none';
   const form = document.createElement('div');
@@ -1307,7 +1217,7 @@ async function renderPositives() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditPositives(k, v);
+      edit.onclick = () => inlineEditPositive(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1328,7 +1238,7 @@ async function renderPositives() {
   });
 }
 
-function inlineEditPositives(key, data) {
+function inlineEditPositive(key, data) {
   const wrapper = document.querySelector(`#positiveList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
   if (!wrapper) {
     renderPositives();
@@ -1374,85 +1284,22 @@ function inlineEditPositives(key, data) {
   };
 }
 
-async function renderGrowth() {
-  const chartEl = document.getElementById('growthChart');
-  if (!chartEl) return;
-
-  // Fetch users from Firebase
-  const usersSnap = await get(ref(db, 'users'));
-  if (!usersSnap.exists()) {
-    chartEl.parentElement.insertAdjacentHTML('afterend', '<div class="muted">No user data available yet.</div>');
-    return;
-  }
-
-  // Group users by creation date (daily)
-  let dates = {};
-  usersSnap.forEach(child => {
-    const createdAt = child.val().createdAt;
-    if (createdAt) {
-      const date = new Date(createdAt).toISOString().split('T')[0]; // YYYY-MM-DD
-      dates[date] = (dates[date] || 0) + 1;
-    }
-  });
-
-  // Sort dates and compute cumulative growth
-  const sortedDates = Object.keys(dates).sort();
-  const cumulative = [];
-  let total = 0;
-  sortedDates.forEach(date => {
-    total += dates[date];
-    cumulative.push(total);
-  });
-
-  // Render the chart
-  const ctx = chartEl.getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: sortedDates,
-      datasets: [{
-        label: 'Cumulative Users',
-        data: cumulative,
-        borderColor: 'var(--blue)',
-        backgroundColor: 'rgba(0, 122, 255, 0.1)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: { display: true, text: 'Total Users' }
-        },
-        x: {
-          title: { display: true, text: 'Date' }
-        }
-      },
-      plugins: {
-        legend: { position: 'top' }
-      }
-    }
-  });
-}
-
 document.getElementById('sendComplaint').addEventListener('click', async () => {
-  const txt = document.getElementById('complaintText').value.trim();
-  document.getElementById('complaintMsg').textContent = '';
-  if (!txt) {
-    document.getElementById('complaintMsg').textContent = 'Enter a message';
+  const text = document.getElementById('complaintText').value.trim();
+  const msgEl = document.getElementById('complaintMsg');
+  msgEl.textContent = '';
+  if (!text) {
+    msgEl.textContent = 'Type your complaint';
     return;
   }
   const u = auth.currentUser;
   if (!u) {
-    alert('Login to submit complaint');
+    msgEl.textContent = 'Login to submit';
     return;
   }
-  await push(ref(db, 'complaints'), { uid: u.uid, email: u.email, text: txt, createdAt: Date.now(), seen: false });
+  await push(ref(db, 'complaints'), { uid: u.uid, email: u.email, text, createdAt: Date.now(), seen: false });
+  msgEl.textContent = 'Complaint sent. Admins will review.';
   document.getElementById('complaintText').value = '';
-  document.getElementById('complaintMsg').textContent = 'Complaint sent (private).';
   await renderUserComplaints();
 });
 
@@ -1460,6 +1307,11 @@ async function renderComplaints() {
   const list = document.getElementById('complaintsList');
   if (!list) return;
   list.innerHTML = '';
+  const role = await getRoleForCurrentUser();
+  if (role !== 'admin' && role !== 'owner') {
+    list.innerHTML = '<div class="muted">Only admins/owner can view complaints</div>';
+    return;
+  }
   const snap = await get(ref(db, 'complaints'));
   if (!snap.exists()) {
     list.innerHTML = '<div class="muted">No complaints yet</div>';
@@ -1470,18 +1322,10 @@ async function renderComplaints() {
     const k = c.key;
     const row = document.createElement('div');
     row.className = 'complaint fade-in';
-    row.style.display = 'flex';
-    row.style.flexDirection = 'column';
-    row.style.gap = '8px';
     row.innerHTML = `
-      <div style="display:flex;justify-content:space-between">
-        <div>
-          <strong>${esc(cm.email)}</strong>
-          <div class="small-muted">${new Date(cm.createdAt).toLocaleString()}</div>
-        </div>
-        <div>
-          <span class="tag">${cm.seen ? 'Seen' : 'New'}</span>
-        </div>
+      <div class="flex-between">
+        <div><strong>${esc(cm.email)}</strong> <span class="small-muted">${new Date(cm.createdAt).toLocaleString()}</span></div>
+        <span class="small-muted">${cm.seen ? 'Seen' : 'New'}</span>
       </div>
       <div style="margin-top:0">
         <p><strong>Complaint:</strong> ${esc(cm.text)}</p>
@@ -1828,7 +1672,7 @@ function renderUserTable() {
 
 async function renderDetails() {
   const role = await getRoleForCurrentUser();
-  if (role !== 'admin' && role === 'owner') {
+  if (role !== 'admin' && role !== 'owner') {
     return;
   }
   const usersRef = ref(db, 'users');
@@ -1883,6 +1727,7 @@ function renderNotifications() {
       div.innerHTML = `
         <div>${esc(n.message)}</div>
         <div class="small-muted">${new Date(n.timestamp).toLocaleString()}</div>
+        <span class="notification-delete" onclick="deleteNotification('${n.key}')">❌</span>
       `;
       list.appendChild(div);
     });
@@ -1892,8 +1737,22 @@ function renderNotifications() {
     } else {
       countEl.style.display = 'none';
     }
-  });
+  }, { onlyOnce: false });
 }
+
+async function deleteNotification(key) {
+  const u = auth.currentUser;
+  if (!u) return;
+  await remove(ref(db, 'notifications/' + u.uid + '/' + key));
+}
+
+document.getElementById('clearAllNotif').addEventListener('click', async () => {
+  if (confirm('Delete all notifications?')) {
+    const u = auth.currentUser;
+    if (!u) return;
+    await remove(ref(db, 'notifications/' + u.uid));
+  }
+});
 
 document.getElementById('notifToggle').addEventListener('click', async () => {
   const dropdown = document.getElementById('notifDropdown');
@@ -1916,10 +1775,18 @@ document.getElementById('notifToggle').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('uploadSports').addEventListener('click', async () => {
-  const title = document.getElementById('sportsTitle').value.trim();
-  const text = document.getElementById('sportsText').value.trim();
-  const file = document.getElementById('sportsImageFile').files[0];
+document.getElementById('closeNotif').addEventListener('click', () => {
+  document.getElementById('notifDropdown').style.display = 'none';
+});
+
+if (window.innerWidth <= 900) {
+  document.getElementById('closeNotif').style.display = 'block';
+}
+
+document.getElementById('uploadWorldnews').addEventListener('click', async () => {
+  const title = document.getElementById('worldnewsTitle').value.trim();
+  const text = document.getElementById('worldnewsText').value.trim();
+  const file = document.getElementById('worldnewsImageFile').files[0];
   if (!title || !text) {
     alert('Title & text required');
     return;
@@ -1928,29 +1795,29 @@ document.getElementById('uploadSports').addEventListener('click', async () => {
   if (role === 'admin' || role === 'owner') {
     let image = '';
     if (file) {
-      const sRef = storageRef(storage, 'worldnews/sports/' + Date.now() + '_' + file.name);
+      const sRef = storageRef(storage, 'worldnews/' + Date.now() + '_' + file.name);
       await uploadBytes(sRef, file);
       image = await getDownloadURL(sRef);
     }
-    await push(ref(db, 'worldnews/sports'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New sports news added: ${title}`);
-    document.getElementById('sportsTitle').value = '';
-    document.getElementById('sportsText').value = '';
-    document.getElementById('sportsImageFile').value = '';
-    await renderSports();
+    await push(ref(db, 'worldnews'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
+    await notifyAllUsers(`New world news added: ${title}`);
+    document.getElementById('worldnewsTitle').value = '';
+    document.getElementById('worldnewsText').value = '';
+    document.getElementById('worldnewsImageFile').value = '';
+    await renderWorldNews();
   } else alert('Only admins/owner can add news');
 });
 
-document.getElementById('clearSports').addEventListener('click', () => {
-  document.getElementById('sportsTitle').value = '';
-  document.getElementById('sportsText').value = '';
-  document.getElementById('sportsImageFile').value = '';
+document.getElementById('clearWorldnews').addEventListener('click', () => {
+  document.getElementById('worldnewsTitle').value = '';
+  document.getElementById('worldnewsText').value = '';
+  document.getElementById('worldnewsImageFile').value = '';
 });
 
-async function renderSports() {
-  const listEl = document.getElementById('sportsList');
+async function renderWorldNews() {
+  const listEl = document.getElementById('worldnewsList');
   listEl.innerHTML = '';
-  const path = 'worldnews/sports';
+  const path = 'worldnews';
   const snap = await get(ref(db, path));
   if (!snap.exists()) {
     listEl.innerHTML = '<div class="muted">No news yet</div>';
@@ -1965,15 +1832,15 @@ async function renderSports() {
     wrapper.innerHTML = `
       <div class="flex-between">
         <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
-        <div><span class="small-muted">👍</span> <span class="count" id="sportslikes-${k}">0</span></div>
+        <div><span class="small-muted">👍</span> <span class="count" id="worldnewslikes-${k}">0</span></div>
       </div>
       <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
       ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
       <div class="controls">
-        <button class="small-btn like-btn" id="sportslikes-btn-${k}" data-collection="worldnews/sports" data-id="${k}">Like</button>
-        <button class="small-btn commentToggle" data-type="sports" data-id="${k}">Comments</button>
+        <button class="small-btn like-btn" id="worldnewslikes-btn-${k}" data-collection="worldnews" data-id="${k}">Like</button>
+        <button class="small-btn commentToggle" data-type="worldnews" data-id="${k}">Comments</button>
       </div>
-      <div class="comment-box" id="sportscomments-${k}" style="display:none">
+      <div class="comment-box" id="worldnewscomments-${k}" style="display:none">
         <div class="comment-form">
           <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
           <div class="row" style="margin-top:8px">
@@ -1988,7 +1855,7 @@ async function renderSports() {
       const edit = document.createElement('button');
       edit.className = 'small-btn';
       edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditSports(k, v);
+      edit.onclick = () => inlineEditWorldnews(k, v);
       const del = document.createElement('button');
       del.className = 'small-btn';
       del.style.background = '#fee';
@@ -1996,23 +1863,23 @@ async function renderSports() {
       del.onclick = async () => {
         if (confirm('Delete news?')) {
           await remove(ref(db, path + '/' + k));
-          renderSports();
+          renderWorldNews();
         }
       };
       wrapper.querySelector('.controls').appendChild(edit);
       wrapper.querySelector('.controls').appendChild(del);
     }
     listEl.appendChild(wrapper);
-    wrapper.querySelector(`#sportslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
-    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'sports'));
-    watchLikes('worldnews/sports', k, `sportslikes-${k}`, `sportslikes-btn-${k}`);
+    wrapper.querySelector(`#worldnewslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
+    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'worldnews'));
+    watchLikes('worldnews', k, `worldnewslikes-${k}`, `worldnewslikes-btn-${k}`);
   });
 }
 
-function inlineEditSports(key, data) {
-  const wrapper = document.querySelector(`#sportsList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
+function inlineEditWorldnews(key, data) {
+  const wrapper = document.querySelector(`#worldnewsList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
   if (!wrapper) {
-    renderSports();
+    renderWorldNews();
     return;
   }
   const body = wrapper.querySelector('div:nth-child(2)');
@@ -2046,429 +1913,12 @@ function inlineEditSports(key, data) {
     }
     let ni = data.image || '';
     if (file) {
-      const sRef = storageRef(storage, 'worldnews/sports/' + Date.now() + '_' + file.name);
+      const sRef = storageRef(storage, 'worldnews/' + Date.now() + '_' + file.name);
       await uploadBytes(sRef, file);
       ni = await getDownloadURL(sRef);
     }
-    await update(ref(db, 'worldnews/sports/' + key), { title: nt, text: nc, image: ni });
-    await renderSports();
-  };
-}
-
-document.getElementById('uploadTechnology').addEventListener('click', async () => {
-  const title = document.getElementById('technologyTitle').value.trim();
-  const text = document.getElementById('technologyText').value.trim();
-  const file = document.getElementById('technologyImageFile').files[0];
-  if (!title || !text) {
-    alert('Title & text required');
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  if (role === 'admin' || role === 'owner') {
-    let image = '';
-    if (file) {
-      const sRef = storageRef(storage, 'worldnews/technology/' + Date.now() + '_' + file.name);
-      await uploadBytes(sRef, file);
-      image = await getDownloadURL(sRef);
-    }
-    await push(ref(db, 'worldnews/technology'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New technology news added: ${title}`);
-    document.getElementById('technologyTitle').value = '';
-    document.getElementById('technologyText').value = '';
-    document.getElementById('technologyImageFile').value = '';
-    await renderTechnology();
-  } else alert('Only admins/owner can add news');
-});
-
-document.getElementById('clearTechnology').addEventListener('click', () => {
-  document.getElementById('technologyTitle').value = '';
-  document.getElementById('technologyText').value = '';
-  document.getElementById('technologyImageFile').value = '';
-});
-
-async function renderTechnology() {
-  const listEl = document.getElementById('technologyList');
-  listEl.innerHTML = '';
-  const path = 'worldnews/technology';
-  const snap = await get(ref(db, path));
-  if (!snap.exists()) {
-    listEl.innerHTML = '<div class="muted">No news yet</div>';
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  snap.forEach(child => {
-    const v = child.val();
-    const k = child.key;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'positive fade-in';
-    wrapper.innerHTML = `
-      <div class="flex-between">
-        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
-        <div><span class="small-muted">👍</span> <span class="count" id="technologylikes-${k}">0</span></div>
-      </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
-      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
-      <div class="controls">
-        <button class="small-btn like-btn" id="technologylikes-btn-${k}" data-collection="worldnews/technology" data-id="${k}">Like</button>
-        <button class="small-btn commentToggle" data-type="technology" data-id="${k}">Comments</button>
-      </div>
-      <div class="comment-box" id="technologycomments-${k}" style="display:none">
-        <div class="comment-form">
-          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
-          <div class="row" style="margin-top:8px">
-            <button class="btn postComment">Post comment</button>
-            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
-          </div>
-        </div>
-        <div class="comments-list"></div>
-      </div>
-    `;
-    if (role === 'admin' || role === 'owner') {
-      const edit = document.createElement('button');
-      edit.className = 'small-btn';
-      edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditTechnology(k, v);
-      const del = document.createElement('button');
-      del.className = 'small-btn';
-      del.style.background = '#fee';
-      del.textContent = 'Delete';
-      del.onclick = async () => {
-        if (confirm('Delete news?')) {
-          await remove(ref(db, path + '/' + k));
-          renderTechnology();
-        }
-      };
-      wrapper.querySelector('.controls').appendChild(edit);
-      wrapper.querySelector('.controls').appendChild(del);
-    }
-    listEl.appendChild(wrapper);
-    wrapper.querySelector(`#technologylikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
-    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'technology'));
-    watchLikes('worldnews/technology', k, `technologylikes-${k}`, `technologylikes-btn-${k}`);
-  });
-}
-
-function inlineEditTechnology(key, data) {
-  const wrapper = document.querySelector(`#technologyList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
-  if (!wrapper) {
-    renderTechnology();
-    return;
-  }
-  const body = wrapper.querySelector('div:nth-child(2)');
-  const imageEl = wrapper.querySelector('img');
-  if (body) body.style.display = 'none';
-  if (imageEl) imageEl.style.display = 'none';
-  const form = document.createElement('div');
-  form.className = 'edit-form card';
-  form.innerHTML = `
-    <input class="edit-title" value="${escAttr(data.title)}" />
-    <textarea class="edit-content">${esc(data.text)}</textarea>
-    <input class="edit-image-file" type="file" accept="image/*" />
-    <div class="edit-controls">
-      <button class="btn save">Save</button>
-      <button class="small-btn cancel">Cancel</button>
-    </div>
-  `;
-  wrapper.appendChild(form);
-  form.querySelector('.cancel').onclick = () => {
-    form.remove();
-    if (body) body.style.display = 'block';
-    if (imageEl) imageEl.style.display = 'block';
-  };
-  form.querySelector('.save').onclick = async () => {
-    const nt = form.querySelector('.edit-title').value.trim();
-    const nc = form.querySelector('.edit-content').value.trim();
-    const file = form.querySelector('.edit-image-file').files[0];
-    if (!nt || !nc) {
-      alert('Title & text required');
-      return;
-    }
-    let ni = data.image || '';
-    if (file) {
-      const sRef = storageRef(storage, 'worldnews/technology/' + Date.now() + '_' + file.name);
-      await uploadBytes(sRef, file);
-      ni = await getDownloadURL(sRef);
-    }
-    await update(ref(db, 'worldnews/technology/' + key), { title: nt, text: nc, image: ni });
-    await renderTechnology();
-  };
-}
-
-document.getElementById('uploadBusiness').addEventListener('click', async () => {
-  const title = document.getElementById('businessTitle').value.trim();
-  const text = document.getElementById('businessText').value.trim();
-  const file = document.getElementById('businessImageFile').files[0];
-  if (!title || !text) {
-    alert('Title & text required');
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  if (role === 'admin' || role === 'owner') {
-    let image = '';
-    if (file) {
-      const sRef = storageRef(storage, 'worldnews/business/' + Date.now() + '_' + file.name);
-      await uploadBytes(sRef, file);
-      image = await getDownloadURL(sRef);
-    }
-    await push(ref(db, 'worldnews/business'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New business news added: ${title}`);
-    document.getElementById('businessTitle').value = '';
-    document.getElementById('businessText').value = '';
-    document.getElementById('businessImageFile').value = '';
-    await renderBusiness();
-  } else alert('Only admins/owner can add news');
-});
-
-document.getElementById('clearBusiness').addEventListener('click', () => {
-  document.getElementById('businessTitle').value = '';
-  document.getElementById('businessText').value = '';
-  document.getElementById('businessImageFile').value = '';
-});
-
-async function renderBusiness() {
-  const listEl = document.getElementById('businessList');
-  listEl.innerHTML = '';
-  const path = 'worldnews/business';
-  const snap = await get(ref(db, path));
-  if (!snap.exists()) {
-    listEl.innerHTML = '<div class="muted">No news yet</div>';
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  snap.forEach(child => {
-    const v = child.val();
-    const k = child.key;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'positive fade-in';
-    wrapper.innerHTML = `
-      <div class="flex-between">
-        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
-        <div><span class="small-muted">👍</span> <span class="count" id="businesslikes-${k}">0</span></div>
-      </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
-      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
-      <div class="controls">
-        <button class="small-btn like-btn" id="businesslikes-btn-${k}" data-collection="worldnews/business" data-id="${k}">Like</button>
-        <button class="small-btn commentToggle" data-type="business" data-id="${k}">Comments</button>
-      </div>
-      <div class="comment-box" id="businesscomments-${k}" style="display:none">
-        <div class="comment-form">
-          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
-          <div class="row" style="margin-top:8px">
-            <button class="btn postComment">Post comment</button>
-            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
-          </div>
-        </div>
-        <div class="comments-list"></div>
-      </div>
-    `;
-    if (role === 'admin' || role === 'owner') {
-      const edit = document.createElement('button');
-      edit.className = 'small-btn';
-      edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditBusiness(k, v);
-      const del = document.createElement('button');
-      del.className = 'small-btn';
-      del.style.background = '#fee';
-      del.textContent = 'Delete';
-      del.onclick = async () => {
-        if (confirm('Delete news?')) {
-          await remove(ref(db, path + '/' + k));
-          renderBusiness();
-        }
-      };
-      wrapper.querySelector('.controls').appendChild(edit);
-      wrapper.querySelector('.controls').appendChild(del);
-    }
-    listEl.appendChild(wrapper);
-    wrapper.querySelector(`#businesslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
-    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'business'));
-    watchLikes('worldnews/business', k, `businesslikes-${k}`, `businesslikes-btn-${k}`);
-  });
-}
-
-function inlineEditBusiness(key, data) {
-  const wrapper = document.querySelector(`#businessList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
-  if (!wrapper) {
-    renderBusiness();
-    return;
-  }
-  const body = wrapper.querySelector('div:nth-child(2)');
-  const imageEl = wrapper.querySelector('img');
-  if (body) body.style.display = 'none';
-  if (imageEl) imageEl.style.display = 'none';
-  const form = document.createElement('div');
-  form.className = 'edit-form card';
-  form.innerHTML = `
-    <input class="edit-title" value="${escAttr(data.title)}" />
-    <textarea class="edit-content">${esc(data.text)}</textarea>
-    <input class="edit-image-file" type="file" accept="image/*" />
-    <div class="edit-controls">
-      <button class="btn save">Save</button>
-      <button class="small-btn cancel">Cancel</button>
-    </div>
-  `;
-  wrapper.appendChild(form);
-  form.querySelector('.cancel').onclick = () => {
-    form.remove();
-    if (body) body.style.display = 'block';
-    if (imageEl) imageEl.style.display = 'block';
-  };
-  form.querySelector('.save').onclick = async () => {
-    const nt = form.querySelector('.edit-title').value.trim();
-    const nc = form.querySelector('.edit-content').value.trim();
-    const file = form.querySelector('.edit-image-file').files[0];
-    if (!nt || !nc) {
-      alert('Title & text required');
-      return;
-    }
-    let ni = data.image || '';
-    if (file) {
-      const sRef = storageRef(storage, 'worldnews/business/' + Date.now() + '_' + file.name);
-      await uploadBytes(sRef, file);
-      ni = await getDownloadURL(sRef);
-    }
-    await update(ref(db, 'worldnews/business/' + key), { title: nt, text: nc, image: ni });
-    await renderBusiness();
-  };
-}
-
-document.getElementById('uploadOthers').addEventListener('click', async () => {
-  const title = document.getElementById('othersTitle').value.trim();
-  const text = document.getElementById('othersText').value.trim();
-  const file = document.getElementById('othersImageFile').files[0];
-  if (!title || !text) {
-    alert('Title & text required');
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  if (role === 'admin' || role === 'owner') {
-    let image = '';
-    if (file) {
-      const sRef = storageRef(storage, 'worldnews/others/' + Date.now() + '_' + file.name);
-      await uploadBytes(sRef, file);
-      image = await getDownloadURL(sRef);
-    }
-    await push(ref(db, 'worldnews/others'), { title, text, image, uploader: auth.currentUser.uid, createdAt: Date.now() });
-    await notifyAllUsers(`New others news added: ${title}`);
-    document.getElementById('othersTitle').value = '';
-    document.getElementById('othersText').value = '';
-    document.getElementById('othersImageFile').value = '';
-    await renderOthers();
-  } else alert('Only admins/owner can add news');
-});
-
-document.getElementById('clearOthers').addEventListener('click', () => {
-  document.getElementById('othersTitle').value = '';
-  document.getElementById('othersText').value = '';
-  document.getElementById('othersImageFile').value = '';
-});
-
-async function renderOthers() {
-  const listEl = document.getElementById('othersList');
-  listEl.innerHTML = '';
-  const path = 'worldnews/others';
-  const snap = await get(ref(db, path));
-  if (!snap.exists()) {
-    listEl.innerHTML = '<div class="muted">No news yet</div>';
-    return;
-  }
-  const role = await getRoleForCurrentUser();
-  snap.forEach(child => {
-    const v = child.val();
-    const k = child.key;
-    const wrapper = document.createElement('div');
-    wrapper.className = 'positive fade-in';
-    wrapper.innerHTML = `
-      <div class="flex-between">
-        <div><strong>${esc(v.title)}</strong><div class="small-muted">Added: ${new Date(v.createdAt).toLocaleString()}</div></div>
-        <div><span class="small-muted">👍</span> <span class="count" id="otherslikes-${k}">0</span></div>
-      </div>
-      <div style="margin-top:8px"><p style="text-align: justify;">${esc(v.text)}</p></div>
-      ${v.image ? `<img src="${escAttr(v.image)}" alt="${esc(v.title)}" style="max-width:100%;border-radius:8px;margin-top:8px;display:block;">` : ''}
-      <div class="controls">
-        <button class="small-btn like-btn" id="otherslikes-btn-${k}" data-collection="worldnews/others" data-id="${k}">Like</button>
-        <button class="small-btn commentToggle" data-type="others" data-id="${k}">Comments</button>
-      </div>
-      <div class="comment-box" id="otherscomments-${k}" style="display:none">
-        <div class="comment-form">
-          <textarea class="new-comment" placeholder="Write a comment..." style="width:100%;min-height:64px"></textarea>
-          <div class="row" style="margin-top:8px">
-            <button class="btn postComment">Post comment</button>
-            <div class="small-muted" style="align-self:center;margin-left:8px">Comments are visible to everyone</div>
-          </div>
-        </div>
-        <div class="comments-list"></div>
-      </div>
-    `;
-    if (role === 'admin' || role === 'owner') {
-      const edit = document.createElement('button');
-      edit.className = 'small-btn';
-      edit.textContent = 'Edit';
-      edit.onclick = () => inlineEditOthers(k, v);
-      const del = document.createElement('button');
-      del.className = 'small-btn';
-      del.style.background = '#fee';
-      del.textContent = 'Delete';
-      del.onclick = async () => {
-        if (confirm('Delete news?')) {
-          await remove(ref(db, path + '/' + k));
-          renderOthers();
-        }
-      };
-      wrapper.querySelector('.controls').appendChild(edit);
-      wrapper.querySelector('.controls').appendChild(del);
-    }
-    listEl.appendChild(wrapper);
-    wrapper.querySelector(`#otherslikes-btn-${k}`).addEventListener('click', (e) => toggleLike(e.target.dataset.collection, e.target.dataset.id, e.target));
-    wrapper.querySelector('.commentToggle').addEventListener('click', () => toggleComments(path, k, 'others'));
-    watchLikes('worldnews/others', k, `otherslikes-${k}`, `otherslikes-btn-${k}`);
-  });
-}
-
-function inlineEditOthers(key, data) {
-  const wrapper = document.querySelector(`#othersList .positive .like-btn[data-id="${key}"]`)?.closest('.positive');
-  if (!wrapper) {
-    renderOthers();
-    return;
-  }
-  const body = wrapper.querySelector('div:nth-child(2)');
-  const imageEl = wrapper.querySelector('img');
-  if (body) body.style.display = 'none';
-  if (imageEl) imageEl.style.display = 'none';
-  const form = document.createElement('div');
-  form.className = 'edit-form card';
-  form.innerHTML = `
-    <input class="edit-title" value="${escAttr(data.title)}" />
-    <textarea class="edit-content">${esc(data.text)}</textarea>
-    <input class="edit-image-file" type="file" accept="image/*" />
-    <div class="edit-controls">
-      <button class="btn save">Save</button>
-      <button class="small-btn cancel">Cancel</button>
-    </div>
-  `;
-  wrapper.appendChild(form);
-  form.querySelector('.cancel').onclick = () => {
-    form.remove();
-    if (body) body.style.display = 'block';
-    if (imageEl) imageEl.style.display = 'block';
-  };
-  form.querySelector('.save').onclick = async () => {
-    const nt = form.querySelector('.edit-title').value.trim();
-    const nc = form.querySelector('.edit-content').value.trim();
-    const file = form.querySelector('.edit-image-file').files[0];
-    if (!nt || !nc) {
-      alert('Title & text required');
-      return;
-    }
-    let ni = data.image || '';
-    if (file) {
-      const sRef = storageRef(storage, 'worldnews/others/' + Date.now() + '_' + file.name);
-      await uploadBytes(sRef, file);
-      ni = await getDownloadURL(sRef);
-    }
-    await update(ref(db, 'worldnews/others/' + key), { title: nt, text: nc, image: ni });
-    await renderOthers();
+    await update(ref(db, 'worldnews/' + key), { title: nt, text: nc, image: ni });
+    await renderWorldNews();
   };
 }
 
@@ -2533,10 +1983,7 @@ async function toggleComments(collectionPath, itemId, type) {
   if (type === 'video') prefix = 'vcomments-';
   else if (type === 'post') prefix = 'pcomments-';
   else if (type === 'positive') prefix = 'positcomments-';
-  else if (type === 'sports') prefix = 'sportscomments-';
-  else if (type === 'technology') prefix = 'technologycomments-';
-  else if (type === 'business') prefix = 'businesscomments-';
-  else if (type === 'others') prefix = 'otherscomments-';
+  else if (type === 'worldnews') prefix = 'worldnewscomments-';
   const wrapperId = prefix + itemId;
   const box = document.getElementById(wrapperId);
   if (!box) return;
@@ -2606,7 +2053,6 @@ async function renderAll() {
   await renderVideos();
   await renderPosts();
   await renderPositives();
-  await renderGrowth();
   await renderAdmins();
   await renderComplaints();
   await renderUserComplaints();
@@ -2620,4 +2066,4 @@ document.addEventListener('visibilitychange', () => {});
 document.getElementById('app').style.display = 'none';
 </script>
 </body>
-</html></DOCUMENT>
+</html>
